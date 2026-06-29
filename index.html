@@ -1453,12 +1453,13 @@
         <div id="expenseList" class="list"></div>
 
         <div class="actions">
-          <button onclick="copySummary()">
+          <button onclick="downloadSummaryImage()">
             <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
-              <rect x="9" y="9" width="13" height="13" rx="2"/>
-              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <path d="M7 10l5 5 5-5"/>
+              <path d="M12 15V3"/>
             </svg>
-            คัดลอกสรุป
+            บันทึกภาพ
           </button>
 
           <button onclick="shareSummaryImage()">
@@ -2851,6 +2852,33 @@
 
       return canvasBlob(canvas);
     }
+    function downloadBlob(blob, filename) {
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+    }
+
+    async function downloadSummaryImage() {
+      if (!people.length || !expenses.length) {
+        showToast("กรุณาเพิ่มข้อมูลก่อนบันทึกภาพ");
+        return;
+      }
+
+      try {
+        const blob = await createSummaryImageBlob();
+        downloadBlob(blob, "party-split-summary.png");
+        showToast("บันทึกภาพสรุปแล้ว");
+      } catch (error) {
+        console.error(error);
+        showToast("บันทึกภาพไม่สำเร็จ");
+      }
+    }
+
     async function shareSummaryImage() {
       if (!people.length || !expenses.length) {
         showToast("กรุณาเพิ่มข้อมูลก่อนแชร์รูป");
@@ -2873,27 +2901,11 @@
           }
         }
 
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement("a");
-        link.href = url;
-        link.download = "party-split-summary.png";
-        document.body.appendChild(link);
-        link.click();
-        link.remove();
-        URL.revokeObjectURL(url);
+        downloadBlob(blob, "party-split-summary.png");
         showToast("ดาวน์โหลดรูปสรุปแล้ว");
       } catch (error) {
         console.error(error);
         showToast("แชร์รูปไม่สำเร็จ");
-      }
-    }
-    async function copySummary() {
-      const text = getSummaryText();
-      try {
-        await navigator.clipboard.writeText(text);
-        showToast("คัดลอกสรุปแล้ว");
-      } catch (error) {
-        showToast("คัดลอกไม่สำเร็จ");
       }
     }
     function escapeHtml(value) {
@@ -2919,6 +2931,7 @@
   </script>
 </body>
 </html>
+
 
 
 

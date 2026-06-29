@@ -799,6 +799,205 @@
       border: 1px solid rgba(255, 255, 255, 0.62);
     }
 
+
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 40;
+      display: grid;
+      place-items: center;
+      padding: 20px;
+      background:
+        radial-gradient(circle at 50% 20%, rgba(255, 255, 255, 0.34), transparent 32%),
+        rgba(15, 23, 42, 0.38);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+      transition:
+        opacity 260ms cubic-bezier(.2,.8,.2,1),
+        visibility 260ms cubic-bezier(.2,.8,.2,1);
+    }
+
+    .modal-overlay.show {
+      opacity: 1;
+      visibility: visible;
+      pointer-events: auto;
+    }
+
+    .modal-card {
+      position: relative;
+      width: min(480px, 100%);
+      overflow: hidden;
+      padding: 22px;
+      border-radius: 32px;
+      border: 1px solid rgba(255, 255, 255, 0.72);
+      background:
+        linear-gradient(135deg, rgba(255,255,255,0.82), rgba(255,255,255,0.48));
+      box-shadow:
+        0 34px 90px rgba(15, 23, 42, 0.30),
+        inset 0 1px 0 rgba(255,255,255,0.82);
+      transform: translateY(18px) scale(0.96);
+      transition:
+        transform 260ms cubic-bezier(.2,.8,.2,1),
+        opacity 260ms cubic-bezier(.2,.8,.2,1);
+    }
+
+    .modal-overlay.show .modal-card {
+      transform: translateY(0) scale(1);
+    }
+
+    .modal-card::before {
+      content: "";
+      position: absolute;
+      inset: -1px;
+      background:
+        radial-gradient(circle at 12% 0%, rgba(79, 70, 229, 0.18), transparent 32%),
+        radial-gradient(circle at 96% 10%, rgba(236, 72, 153, 0.16), transparent 34%);
+      pointer-events: none;
+    }
+
+    .modal-card > * {
+      position: relative;
+      z-index: 1;
+    }
+
+    .modal-close {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      width: 42px;
+      min-height: 42px;
+      padding: 0;
+      border-radius: 16px;
+      color: var(--muted);
+      background: rgba(255, 255, 255, 0.56);
+      border: 1px solid rgba(255, 255, 255, 0.7);
+      box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06);
+    }
+
+    .modal-close:hover {
+      color: var(--text);
+      background: rgba(255, 255, 255, 0.84);
+    }
+
+    .modal-head {
+      display: flex;
+      gap: 14px;
+      align-items: flex-start;
+      padding-right: 42px;
+    }
+
+    .modal-icon {
+      width: 54px;
+      height: 54px;
+      display: grid;
+      place-items: center;
+      flex: 0 0 auto;
+      border-radius: 22px;
+      color: #991b1b;
+      background:
+        linear-gradient(135deg, rgba(254, 226, 226, 0.96), rgba(255, 255, 255, 0.62));
+      border: 1px solid rgba(254, 202, 202, 0.9);
+      box-shadow:
+        0 16px 32px rgba(185, 28, 28, 0.12),
+        inset 0 1px 0 rgba(255,255,255,0.88);
+    }
+
+    .modal-icon.admin {
+      color: #3730a3;
+      background:
+        linear-gradient(135deg, rgba(238, 242, 255, 0.96), rgba(255, 255, 255, 0.62));
+      border-color: rgba(199, 210, 254, 0.9);
+      box-shadow:
+        0 16px 32px rgba(79, 70, 229, 0.12),
+        inset 0 1px 0 rgba(255,255,255,0.88);
+    }
+
+    .modal-kicker {
+      margin: 0 0 5px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 950;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .modal-title {
+      margin: 0;
+      color: var(--text);
+      font-size: clamp(21px, 4vw, 27px);
+      line-height: 1.18;
+      font-weight: 950;
+      letter-spacing: -0.045em;
+    }
+
+    .modal-message {
+      margin: 14px 0 0;
+      color: var(--text-soft);
+      font-size: 15px;
+      line-height: 1.75;
+      font-weight: 650;
+      white-space: pre-line;
+    }
+
+    .modal-input-wrap {
+      display: none;
+      margin-top: 18px;
+    }
+
+    .modal-input-wrap.show {
+      display: block;
+    }
+
+    .modal-input-helper {
+      display: block;
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+      line-height: 1.5;
+    }
+
+    .modal-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 20px;
+    }
+
+    .modal-confirm.danger {
+      color: #fff;
+      background:
+        linear-gradient(135deg, #991b1b, #dc2626);
+      box-shadow:
+        0 16px 34px rgba(185, 28, 28, 0.22),
+        inset 0 1px 0 rgba(255,255,255,0.22);
+    }
+
+    .modal-confirm.admin {
+      color: #fff;
+      background:
+        linear-gradient(135deg, #312e81, #4f46e5);
+      box-shadow:
+        0 16px 34px rgba(79, 70, 229, 0.24),
+        inset 0 1px 0 rgba(255,255,255,0.22);
+    }
+
+    .modal-cancel {
+      color: var(--primary);
+      background: rgba(255, 255, 255, 0.64);
+      border: 1px solid var(--border);
+      box-shadow:
+        0 10px 24px rgba(15, 23, 42, 0.06),
+        inset 0 1px 0 rgba(255,255,255,0.72);
+    }
+
+    .modal-cancel:hover {
+      background: rgba(255, 255, 255, 0.88);
+    }
+
     .toast {
       position: fixed;
       left: 50%;
@@ -1333,6 +1532,45 @@
     </main>
   </div>
 
+
+  <div id="appModal" class="modal-overlay" aria-hidden="true">
+    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="modalTitle" aria-describedby="modalMessage">
+      <button id="modalCloseBtn" class="modal-close" type="button" aria-label="ปิดหน้าต่าง">
+        <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M18 6 6 18"/>
+          <path d="m6 6 12 12"/>
+        </svg>
+      </button>
+
+      <div class="modal-head">
+        <div id="modalIcon" class="modal-icon" aria-hidden="true">
+          <svg class="icon icon-lg" viewBox="0 0 24 24">
+            <path d="M3 6h18"/>
+            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/>
+            <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+          </svg>
+        </div>
+
+        <div>
+          <p id="modalKicker" class="modal-kicker">Confirm Action</p>
+          <h3 id="modalTitle" class="modal-title">ยืนยันการดำเนินการ</h3>
+          <p id="modalMessage" class="modal-message">กรุณายืนยันก่อนดำเนินการต่อ</p>
+        </div>
+      </div>
+
+      <div id="modalInputWrap" class="modal-input-wrap">
+        <label id="modalInputLabel" for="modalInput">รหัสยืนยัน</label>
+        <input id="modalInput" type="password" autocomplete="off" placeholder="กรอกรหัส Admin" />
+        <span id="modalInputHelper" class="modal-input-helper">ระบบจะไม่แสดงรหัสขณะพิมพ์</span>
+      </div>
+
+      <div class="modal-actions">
+        <button id="modalCancelBtn" class="modal-cancel" type="button">ยกเลิก</button>
+        <button id="modalConfirmBtn" class="modal-confirm danger" type="button">ยืนยัน</button>
+      </div>
+    </div>
+  </div>
+
   <div id="toast" class="toast"></div>
 
   <script>
@@ -1378,6 +1616,128 @@
       toast.textContent = message;
       toast.classList.add("show");
       setTimeout(() => toast.classList.remove("show"), 2200);
+    }
+
+
+    function showAppModal(options = {}) {
+      const overlay = document.getElementById("appModal");
+      const closeBtn = document.getElementById("modalCloseBtn");
+      const cancelBtn = document.getElementById("modalCancelBtn");
+      const confirmBtn = document.getElementById("modalConfirmBtn");
+      const icon = document.getElementById("modalIcon");
+      const kicker = document.getElementById("modalKicker");
+      const title = document.getElementById("modalTitle");
+      const message = document.getElementById("modalMessage");
+      const inputWrap = document.getElementById("modalInputWrap");
+      const inputLabel = document.getElementById("modalInputLabel");
+      const input = document.getElementById("modalInput");
+      const inputHelper = document.getElementById("modalInputHelper");
+
+      const settings = {
+        variant: "danger",
+        kicker: "Confirm Action",
+        title: "ยืนยันการดำเนินการ",
+        message: "กรุณายืนยันก่อนดำเนินการต่อ",
+        confirmText: "ยืนยัน",
+        cancelText: "ยกเลิก",
+        input: false,
+        inputType: "text",
+        inputLabel: "รหัสยืนยัน",
+        inputPlaceholder: "",
+        inputHelper: "",
+        ...options
+      };
+
+      const iconTrash = `
+        <svg class="icon icon-lg" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M3 6h18"/>
+          <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/>
+          <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+          <path d="M10 11v6"/>
+          <path d="M14 11v6"/>
+        </svg>
+      `;
+
+      const iconShield = `
+        <svg class="icon icon-lg" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M20 13c0 5-3.5 7-8 9-4.5-2-8-4-8-9V5l8-3 8 3v8Z"/>
+          <path d="m9 12 2 2 4-4"/>
+        </svg>
+      `;
+
+      icon.className = settings.variant === "admin" ? "modal-icon admin" : "modal-icon";
+      icon.innerHTML = settings.variant === "admin" ? iconShield : iconTrash;
+      kicker.textContent = settings.kicker;
+      title.textContent = settings.title;
+      message.textContent = settings.message;
+      cancelBtn.textContent = settings.cancelText;
+      confirmBtn.textContent = settings.confirmText;
+      confirmBtn.className = settings.variant === "admin" ? "modal-confirm admin" : "modal-confirm danger";
+
+      input.value = "";
+      input.type = settings.inputType;
+      input.placeholder = settings.inputPlaceholder;
+      inputLabel.textContent = settings.inputLabel;
+      inputHelper.textContent = settings.inputHelper;
+      inputWrap.classList.toggle("show", Boolean(settings.input));
+
+      return new Promise((resolve) => {
+        let isResolved = false;
+
+        const cleanup = (result) => {
+          if (isResolved) return;
+          isResolved = true;
+          overlay.classList.remove("show");
+          overlay.setAttribute("aria-hidden", "true");
+          document.removeEventListener("keydown", handleKeydown);
+          overlay.removeEventListener("click", handleOverlayClick);
+          closeBtn.onclick = null;
+          cancelBtn.onclick = null;
+          confirmBtn.onclick = null;
+
+          setTimeout(() => resolve(result), 160);
+        };
+
+        const handleKeydown = (event) => {
+          if (event.key === "Escape") {
+            cleanup({ confirmed: false, value: "" });
+          }
+
+          if (event.key === "Enter") {
+            cleanup({
+              confirmed: true,
+              value: settings.input ? input.value : ""
+            });
+          }
+        };
+
+        const handleOverlayClick = (event) => {
+          if (event.target === overlay) {
+            cleanup({ confirmed: false, value: "" });
+          }
+        };
+
+        closeBtn.onclick = () => cleanup({ confirmed: false, value: "" });
+        cancelBtn.onclick = () => cleanup({ confirmed: false, value: "" });
+        confirmBtn.onclick = () => cleanup({
+          confirmed: true,
+          value: settings.input ? input.value : ""
+        });
+
+        document.addEventListener("keydown", handleKeydown);
+        overlay.addEventListener("click", handleOverlayClick);
+
+        overlay.classList.add("show");
+        overlay.setAttribute("aria-hidden", "false");
+
+        setTimeout(() => {
+          if (settings.input) {
+            input.focus();
+          } else {
+            confirmBtn.focus();
+          }
+        }, 80);
+      });
     }
 
     function render() {
@@ -1631,14 +1991,23 @@
       save();
     }
 
-    function removePerson(index) {
+    async function removePerson(index) {
       const name = people[index];
       const hasExpense = expenses.some(item => item.payer === name);
       const message = hasExpense
-        ? `มีรายการค่าใช้จ่ายที่ ${name} เป็นคนจ่ายอยู่ หากลบ รายการเหล่านั้นจะถูกลบออกด้วย\n\nต้องการลบจริงไหม?`
-        : `ต้องการลบ ${name} ออกจากรายชื่อจริงไหม?`;
+        ? `มีรายการค่าใช้จ่ายที่ ${name} เป็นคนจ่ายอยู่ หากลบรายชื่อนี้ รายการค่าใช้จ่ายที่เกี่ยวข้องจะถูกลบออกด้วย`
+        : `ต้องการลบ ${name} ออกจากรายชื่อคนหารใช่ไหม?`;
 
-      if (!confirm(message)) {
+      const result = await showAppModal({
+        variant: "danger",
+        kicker: "Delete Member",
+        title: "ยืนยันการลบรายชื่อ",
+        message,
+        confirmText: "ลบรายชื่อ",
+        cancelText: "ยกเลิก"
+      });
+
+      if (!result.confirmed) {
         return;
       }
 
@@ -1684,11 +2053,21 @@
       save();
     }
 
-    function removeExpense(index) {
+    async function removeExpense(index) {
       const item = expenses[index];
       const title = item && item.title ? item.title : "รายการนี้";
 
-      if (!confirm(`ต้องการลบ "${title}" จริงไหม?`)) {
+      const result = await showAppModal({
+        variant: "danger",
+        kicker: "Delete Expense",
+        title: "ยืนยันการลบรายการ",
+        message: `ต้องการลบรายการ "${title}" ใช่ไหม?
+เมื่อลบแล้ว ยอดสรุปจะคำนวณใหม่ทันที`,
+        confirmText: "ลบรายการ",
+        cancelText: "ยกเลิก"
+      });
+
+      if (!result.confirmed) {
         return;
       }
 
@@ -1702,19 +2081,41 @@
       document.getElementById("amount").value = "";
     }
 
-    function clearAll() {
-      const password = prompt("กรุณากรอกรหัส Admin เพื่อยืนยันการล้างข้อมูลทั้งหมด");
+    async function clearAll() {
+      const auth = await showAppModal({
+        variant: "admin",
+        kicker: "Admin Verification",
+        title: "ยืนยันสิทธิ์ผู้ดูแลระบบ",
+        message: "กรุณากรอกรหัส Admin เพื่อยืนยันก่อนล้างข้อมูลทั้งหมด",
+        confirmText: "ตรวจสอบรหัส",
+        cancelText: "ยกเลิก",
+        input: true,
+        inputType: "password",
+        inputLabel: "Admin Password",
+        inputPlaceholder: "กรอกรหัส Admin",
+        inputHelper: "คำใบ้: ใช้รหัสที่กำหนดไว้สำหรับผู้ดูแลระบบ"
+      });
 
-      if (password === null) {
+      if (!auth.confirmed) {
         return;
       }
 
-      if (password !== "Admin1234") {
+      if (auth.value !== "Admin1234") {
         showToast("รหัสไม่ถูกต้อง ไม่สามารถล้างข้อมูลได้");
         return;
       }
 
-      if (!confirm("รหัสถูกต้อง ต้องการล้างข้อมูลทั้งหมดจริงไหม?")) {
+      const confirmClear = await showAppModal({
+        variant: "danger",
+        kicker: "Danger Zone",
+        title: "ล้างข้อมูลทั้งหมด?",
+        message: "รหัสถูกต้องแล้ว
+หากดำเนินการต่อ รายชื่อและรายการค่าใช้จ่ายทั้งหมดในเครื่องนี้จะถูกลบออก",
+        confirmText: "ล้างข้อมูลทั้งหมด",
+        cancelText: "ยกเลิก"
+      });
+
+      if (!confirmClear.confirmed) {
         return;
       }
 

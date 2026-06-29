@@ -1092,13 +1092,6 @@
               <span class="subtle">เพิ่มสมาชิกที่ร่วมแชร์ค่าใช้จ่าย</span>
             </div>
           </div>
-          <button class="btn-soft btn-small" onclick="resetExample()">
-            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
-              <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
-              <path d="M3 3v5h5"/>
-            </svg>
-            โหลดตัวอย่าง
-          </button>
         </div>
 
         <div class="row-people">
@@ -1641,8 +1634,11 @@
     function removePerson(index) {
       const name = people[index];
       const hasExpense = expenses.some(item => item.payer === name);
+      const message = hasExpense
+        ? `มีรายการค่าใช้จ่ายที่ ${name} เป็นคนจ่ายอยู่ หากลบ รายการเหล่านั้นจะถูกลบออกด้วย\n\nต้องการลบจริงไหม?`
+        : `ต้องการลบ ${name} ออกจากรายชื่อจริงไหม?`;
 
-      if (hasExpense && !confirm(`มีรายการที่ ${name} เป็นคนจ่ายอยู่ ต้องการลบจริงไหม?`)) {
+      if (!confirm(message)) {
         return;
       }
 
@@ -1689,6 +1685,13 @@
     }
 
     function removeExpense(index) {
+      const item = expenses[index];
+      const title = item && item.title ? item.title : "รายการนี้";
+
+      if (!confirm(`ต้องการลบ "${title}" จริงไหม?`)) {
+        return;
+      }
+
       expenses.splice(index, 1);
       render();
       showToast("ลบรายการแล้ว");
@@ -1700,7 +1703,21 @@
     }
 
     function clearAll() {
-      if (!confirm("ต้องการล้างข้อมูลทั้งหมดจริงไหม?")) return;
+      const password = prompt("กรุณากรอกรหัส Admin เพื่อยืนยันการล้างข้อมูลทั้งหมด");
+
+      if (password === null) {
+        return;
+      }
+
+      if (password !== "Admin1234") {
+        showToast("รหัสไม่ถูกต้อง ไม่สามารถล้างข้อมูลได้");
+        return;
+      }
+
+      if (!confirm("รหัสถูกต้อง ต้องการล้างข้อมูลทั้งหมดจริงไหม?")) {
+        return;
+      }
+
       people = [];
       expenses = [];
       render();

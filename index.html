@@ -1,0 +1,1814 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Party Split | Enterprise Expense Dashboard</title>
+
+  <style>
+    :root {
+      --bg-1: #E5FFFF;
+      --bg-2: #FFFFE6;
+      --bg-3: #FFE6FF;
+
+      --surface: rgba(255, 255, 255, 0.52);
+      --surface-strong: rgba(255, 255, 255, 0.74);
+      --surface-soft: rgba(255, 255, 255, 0.38);
+
+      --text: #111827;
+      --text-soft: #374151;
+      --muted: #6b7280;
+
+      --border: rgba(255, 255, 255, 0.62);
+      --border-strong: rgba(255, 255, 255, 0.86);
+
+      --primary: #111827;
+      --primary-2: #4f46e5;
+      --primary-soft: rgba(79, 70, 229, 0.10);
+
+      --good: #047857;
+      --good-soft: rgba(4, 120, 87, 0.10);
+      --bad: #b91c1c;
+      --bad-soft: rgba(185, 28, 28, 0.10);
+      --neutral: #64748b;
+      --neutral-soft: rgba(100, 116, 139, 0.10);
+
+      --shadow-sm: 0 10px 28px rgba(15, 23, 42, 0.08);
+      --shadow-md: 0 22px 60px rgba(15, 23, 42, 0.12);
+      --shadow-lg: 0 32px 90px rgba(15, 23, 42, 0.16);
+
+      --radius-xl: 22px;
+      --radius-2xl: 28px;
+      --radius-3xl: 34px;
+
+      --blur: 22px;
+      --transition: 220ms cubic-bezier(.2,.8,.2,1);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family:
+        "Sarabun",
+        "Noto Sans Thai",
+        "Segoe UI",
+        system-ui,
+        -apple-system,
+        BlinkMacSystemFont,
+        sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at 12% 10%, rgba(99, 102, 241, 0.22), transparent 32%),
+        radial-gradient(circle at 86% 14%, rgba(236, 72, 153, 0.18), transparent 30%),
+        radial-gradient(circle at 50% 82%, rgba(20, 184, 166, 0.16), transparent 34%),
+        linear-gradient(135deg, var(--bg-1) 0%, var(--bg-2) 48%, var(--bg-3) 100%);
+      background-attachment: fixed;
+      overflow-x: hidden;
+    }
+
+    body::before,
+    body::after {
+      content: "";
+      position: fixed;
+      width: 420px;
+      height: 420px;
+      border-radius: 999px;
+      z-index: -1;
+      filter: blur(18px);
+      opacity: 0.55;
+      pointer-events: none;
+      animation: floatAura 12s ease-in-out infinite alternate;
+    }
+
+    body::before {
+      top: -140px;
+      left: -100px;
+      background: rgba(125, 211, 252, 0.48);
+    }
+
+    body::after {
+      right: -120px;
+      bottom: -160px;
+      background: rgba(244, 114, 182, 0.38);
+      animation-delay: -4s;
+    }
+
+    @keyframes floatAura {
+      from {
+        transform: translate3d(0, 0, 0) scale(1);
+      }
+      to {
+        transform: translate3d(34px, 22px, 0) scale(1.08);
+      }
+    }
+
+    .app {
+      width: min(1220px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: clamp(20px, 4vw, 44px) 0 64px;
+    }
+
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 22px;
+      padding: 12px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.35);
+      backdrop-filter: blur(var(--blur));
+      -webkit-backdrop-filter: blur(var(--blur));
+      box-shadow: var(--shadow-sm);
+    }
+
+    .logo {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 7px 12px 7px 7px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.52);
+      border: 1px solid var(--border);
+      font-weight: 900;
+      letter-spacing: -0.02em;
+    }
+
+    .logo-mark {
+      width: 38px;
+      height: 38px;
+      display: grid;
+      place-items: center;
+      border-radius: 15px;
+      color: #fff;
+      background:
+        linear-gradient(135deg, rgba(17, 24, 39, 1), rgba(79, 70, 229, 0.92));
+      box-shadow: 0 12px 30px rgba(79, 70, 229, 0.24);
+    }
+
+    .topbar-meta {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: var(--muted);
+      font-size: 13px;
+      padding-right: 8px;
+      white-space: nowrap;
+    }
+
+    header.hero {
+      position: relative;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 24px;
+      align-items: end;
+      margin-bottom: 22px;
+      padding: clamp(20px, 4vw, 32px);
+      border-radius: var(--radius-3xl);
+      border: 1px solid var(--border);
+      background:
+        linear-gradient(135deg, rgba(255, 255, 255, 0.62), rgba(255, 255, 255, 0.28));
+      box-shadow: var(--shadow-md);
+      backdrop-filter: blur(var(--blur));
+      -webkit-backdrop-filter: blur(var(--blur));
+      overflow: hidden;
+      transition: transform var(--transition), box-shadow var(--transition), border-color var(--transition);
+    }
+
+    header.hero:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-lg);
+      border-color: var(--border-strong);
+    }
+
+    header.hero::before {
+      content: "";
+      position: absolute;
+      inset: -1px;
+      background:
+        radial-gradient(circle at 20% 10%, rgba(79, 70, 229, 0.18), transparent 38%),
+        radial-gradient(circle at 96% 42%, rgba(236, 72, 153, 0.16), transparent 34%);
+      pointer-events: none;
+      z-index: -1;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      width: fit-content;
+      margin-bottom: 12px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      color: #3730a3;
+      font-size: 13px;
+      font-weight: 800;
+      background: rgba(238, 242, 255, 0.82);
+      border: 1px solid rgba(199, 210, 254, 0.8);
+    }
+
+    .brand h1 {
+      margin: 0;
+      font-size: clamp(32px, 7vw, 64px);
+      line-height: 0.98;
+      letter-spacing: -0.07em;
+      font-weight: 950;
+    }
+
+    .brand p {
+      max-width: 680px;
+      margin: 16px 0 0;
+      color: var(--text-soft);
+      font-size: clamp(15px, 2vw, 18px);
+      line-height: 1.72;
+    }
+
+    .hero-panel {
+      min-width: 260px;
+      padding: 16px;
+      border-radius: 26px;
+      background: rgba(255, 255, 255, 0.48);
+      border: 1px solid var(--border);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.7);
+    }
+
+    .hero-panel-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 12px;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .hero-metric {
+      display: flex;
+      justify-content: space-between;
+      gap: 18px;
+      padding: 12px 0;
+      border-top: 1px solid rgba(255,255,255,0.72);
+    }
+
+    .hero-metric:first-of-type {
+      border-top: 0;
+      padding-top: 0;
+    }
+
+    .hero-metric span {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .hero-metric strong {
+      font-size: 16px;
+      font-weight: 900;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: minmax(360px, 0.88fr) minmax(0, 1.12fr);
+      gap: 18px;
+      align-items: start;
+    }
+
+    .card {
+      position: relative;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-3xl);
+      background:
+        linear-gradient(135deg, rgba(255, 255, 255, 0.62), rgba(255, 255, 255, 0.30));
+      box-shadow: var(--shadow-md);
+      padding: clamp(18px, 3vw, 24px);
+      backdrop-filter: blur(var(--blur));
+      -webkit-backdrop-filter: blur(var(--blur));
+      overflow: hidden;
+      transition:
+        transform var(--transition),
+        box-shadow var(--transition),
+        border-color var(--transition),
+        background var(--transition);
+    }
+
+    .card::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background:
+        linear-gradient(135deg, rgba(255,255,255,0.38), transparent 32%),
+        radial-gradient(circle at 92% 4%, rgba(255,255,255,0.44), transparent 24%);
+      opacity: 0.9;
+    }
+
+    .card > * {
+      position: relative;
+      z-index: 1;
+    }
+
+    .card:hover {
+      transform: translateY(-3px);
+      box-shadow: var(--shadow-lg);
+      border-color: var(--border-strong);
+    }
+
+    .input-card {
+      position: sticky;
+      top: 18px;
+    }
+
+    .section-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .title-stack {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+    }
+
+    .title-stack h2,
+    .card h2 {
+      margin: 0;
+      font-size: clamp(18px, 2.3vw, 23px);
+      letter-spacing: -0.035em;
+      font-weight: 950;
+    }
+
+    .title-icon {
+      width: 42px;
+      height: 42px;
+      display: grid;
+      place-items: center;
+      flex: 0 0 auto;
+      border-radius: 17px;
+      color: var(--primary-2);
+      background: rgba(255, 255, 255, 0.66);
+      border: 1px solid var(--border);
+      box-shadow: 0 12px 28px rgba(15, 23, 42, 0.06);
+    }
+
+    .subtle {
+      display: block;
+      margin-top: 3px;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0;
+    }
+
+    label {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 7px;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    input, select {
+      width: 100%;
+      min-height: 48px;
+      border: 1px solid rgba(226, 232, 240, 0.9);
+      border-radius: 18px;
+      padding: 12px 14px;
+      font-size: 15px;
+      font-family: inherit;
+      color: var(--text);
+      background: rgba(255, 255, 255, 0.78);
+      outline: none;
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.72),
+        0 8px 22px rgba(15, 23, 42, 0.04);
+      transition:
+        border-color var(--transition),
+        box-shadow var(--transition),
+        background var(--transition),
+        transform var(--transition);
+    }
+
+    input:hover, select:hover {
+      background: rgba(255, 255, 255, 0.92);
+      border-color: rgba(203, 213, 225, 1);
+    }
+
+    input:focus, select:focus {
+      border-color: rgba(79, 70, 229, 0.55);
+      box-shadow:
+        0 0 0 5px rgba(79, 70, 229, 0.10),
+        0 12px 28px rgba(15, 23, 42, 0.06);
+      background: rgba(255, 255, 255, 0.96);
+      transform: translateY(-1px);
+    }
+
+    button {
+      min-height: 48px;
+      border: 0;
+      border-radius: 18px;
+      padding: 12px 16px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      font-family: inherit;
+      font-weight: 900;
+      font-size: 14px;
+      cursor: pointer;
+      color: #fff;
+      white-space: nowrap;
+      background:
+        linear-gradient(135deg, #111827, #312e81);
+      box-shadow:
+        0 14px 28px rgba(49, 46, 129, 0.20),
+        inset 0 1px 0 rgba(255,255,255,0.16);
+      transition:
+        transform var(--transition),
+        box-shadow var(--transition),
+        opacity var(--transition),
+        background var(--transition);
+    }
+
+    button:hover {
+      opacity: 0.96;
+      transform: translateY(-2px);
+      box-shadow:
+        0 18px 36px rgba(49, 46, 129, 0.24),
+        inset 0 1px 0 rgba(255,255,255,0.20);
+    }
+
+    button:active {
+      transform: translateY(0) scale(0.98);
+    }
+
+    .btn-soft {
+      color: var(--primary);
+      background: rgba(255, 255, 255, 0.64);
+      border: 1px solid var(--border);
+      box-shadow:
+        0 10px 24px rgba(15, 23, 42, 0.06),
+        inset 0 1px 0 rgba(255,255,255,0.72);
+    }
+
+    .btn-soft:hover {
+      background: rgba(255, 255, 255, 0.86);
+      box-shadow:
+        0 14px 30px rgba(15, 23, 42, 0.09),
+        inset 0 1px 0 rgba(255,255,255,0.8);
+    }
+
+    .btn-danger {
+      color: #991b1b;
+      background: rgba(254, 226, 226, 0.72);
+      border: 1px solid rgba(254, 202, 202, 0.84);
+      box-shadow: 0 10px 24px rgba(185, 28, 28, 0.07);
+    }
+
+    .btn-danger:hover {
+      background: rgba(254, 226, 226, 0.92);
+      box-shadow: 0 14px 30px rgba(185, 28, 28, 0.10);
+    }
+
+    .btn-small {
+      min-height: 40px;
+      padding: 9px 12px;
+      font-size: 13px;
+      border-radius: 15px;
+    }
+
+    .divider {
+      height: 1px;
+      margin: 22px 0;
+      border: 0;
+      background:
+        linear-gradient(90deg, transparent, rgba(148, 163, 184, 0.42), transparent);
+    }
+
+    .row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(140px, 0.8fr) auto;
+      gap: 11px;
+      align-items: end;
+      margin-bottom: 11px;
+    }
+
+    .row-people {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 11px;
+      align-items: end;
+      margin-bottom: 14px;
+    }
+
+    .list {
+      display: grid;
+      gap: 11px;
+      margin-top: 14px;
+    }
+
+    .item,
+    .person-item {
+      position: relative;
+      display: grid;
+      align-items: center;
+      gap: 10px;
+      padding: 10px;
+      border-radius: 24px;
+      border: 1px solid rgba(255, 255, 255, 0.68);
+      background: rgba(255, 255, 255, 0.46);
+      box-shadow: 0 10px 26px rgba(15, 23, 42, 0.05);
+      transition:
+        transform var(--transition),
+        box-shadow var(--transition),
+        background var(--transition),
+        border-color var(--transition);
+    }
+
+    .item {
+      grid-template-columns: minmax(0, 1.15fr) minmax(120px, 0.82fr) 104px auto;
+    }
+
+    .person-item {
+      grid-template-columns: minmax(0, 1fr) auto;
+    }
+
+    .item:hover,
+    .person-item:hover {
+      transform: translateY(-2px);
+      background: rgba(255, 255, 255, 0.66);
+      border-color: rgba(255, 255, 255, 0.9);
+      box-shadow: 0 16px 34px rgba(15, 23, 42, 0.08);
+    }
+
+    .dashboard-card {
+      display: grid;
+      gap: 18px;
+    }
+
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .stat {
+      position: relative;
+      overflow: hidden;
+      min-height: 132px;
+      padding: 16px;
+      border-radius: 28px;
+      border: 1px solid rgba(255, 255, 255, 0.68);
+      background:
+        linear-gradient(135deg, rgba(255, 255, 255, 0.76), rgba(255, 255, 255, 0.40));
+      box-shadow:
+        0 14px 34px rgba(15, 23, 42, 0.07),
+        inset 0 1px 0 rgba(255, 255, 255, 0.72);
+      transition:
+        transform var(--transition),
+        box-shadow var(--transition),
+        border-color var(--transition);
+    }
+
+    .stat:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 20px 42px rgba(15, 23, 42, 0.10);
+      border-color: rgba(255, 255, 255, 0.92);
+    }
+
+    .stat::after {
+      content: "";
+      position: absolute;
+      right: -44px;
+      bottom: -52px;
+      width: 132px;
+      height: 132px;
+      border-radius: 999px;
+      background: rgba(79, 70, 229, 0.10);
+    }
+
+    .stat .label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 900;
+      margin-bottom: 14px;
+    }
+
+    .stat .value {
+      position: relative;
+      z-index: 1;
+      font-size: clamp(26px, 4.2vw, 35px);
+      line-height: 1;
+      font-weight: 950;
+      letter-spacing: -0.06em;
+      color: var(--text);
+    }
+
+    .stat .caption {
+      position: relative;
+      z-index: 1;
+      margin-top: 9px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+      border-radius: 28px;
+      border: 1px solid rgba(255, 255, 255, 0.7);
+      background: rgba(255, 255, 255, 0.42);
+      box-shadow: 0 16px 34px rgba(15, 23, 42, 0.06);
+    }
+
+    table {
+      width: 100%;
+      min-width: 640px;
+      border-collapse: collapse;
+      overflow: hidden;
+      background: transparent;
+    }
+
+    th, td {
+      padding: 15px 14px;
+      text-align: right;
+      border-bottom: 1px solid rgba(226, 232, 240, 0.66);
+      font-size: 14px;
+      white-space: nowrap;
+    }
+
+    th:first-child, td:first-child {
+      text-align: left;
+      font-weight: 900;
+    }
+
+    tr:last-child td {
+      border-bottom: 0;
+    }
+
+    th {
+      position: sticky;
+      top: 0;
+      z-index: 1;
+      color: var(--muted);
+      font-size: 12px;
+      letter-spacing: 0.02em;
+      text-transform: uppercase;
+      font-weight: 950;
+      background: rgba(255, 255, 255, 0.68);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+    }
+
+    tbody tr {
+      transition: background var(--transition);
+    }
+
+    tbody tr:hover {
+      background: rgba(255, 255, 255, 0.48);
+    }
+
+    .receive,
+    .pay,
+    .neutral {
+      display: inline-flex;
+      align-items: center;
+      justify-content: flex-end;
+      width: fit-content;
+      margin-left: auto;
+      padding: 7px 10px;
+      border-radius: 999px;
+      font-weight: 950;
+    }
+
+    .receive {
+      color: var(--good);
+      background: var(--good-soft);
+    }
+
+    .pay {
+      color: var(--bad);
+      background: var(--bad-soft);
+    }
+
+    .neutral {
+      color: var(--neutral);
+      background: var(--neutral-soft);
+    }
+
+    .settlement {
+      display: grid;
+      gap: 11px;
+      margin-top: 2px;
+    }
+
+    .settlement-card {
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: center;
+      padding: 15px;
+      border-radius: 24px;
+      border: 1px solid rgba(255, 255, 255, 0.72);
+      background:
+        linear-gradient(135deg, rgba(255, 255, 255, 0.72), rgba(255, 255, 255, 0.42));
+      box-shadow: 0 14px 30px rgba(15, 23, 42, 0.07);
+      transition:
+        transform var(--transition),
+        box-shadow var(--transition),
+        border-color var(--transition);
+    }
+
+    .settlement-card::before {
+      content: "";
+      position: absolute;
+      left: -38px;
+      top: 50%;
+      width: 88px;
+      height: 88px;
+      border-radius: 999px;
+      transform: translateY(-50%);
+      background: rgba(79, 70, 229, 0.09);
+    }
+
+    .settlement-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 18px 38px rgba(15, 23, 42, 0.10);
+      border-color: rgba(255, 255, 255, 0.94);
+    }
+
+    .settlement-card strong {
+      position: relative;
+      font-size: 16px;
+      font-weight: 950;
+      letter-spacing: -0.02em;
+    }
+
+    .amount-badge {
+      position: relative;
+      flex: 0 0 auto;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      border-radius: 999px;
+      padding: 9px 13px;
+      color: #3730a3;
+      background: rgba(238, 242, 255, 0.86);
+      border: 1px solid rgba(199, 210, 254, 0.82);
+      font-weight: 950;
+      white-space: nowrap;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.7);
+    }
+
+    .actions {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 16px;
+    }
+
+    .note {
+      display: flex;
+      gap: 9px;
+      align-items: flex-start;
+      padding: 12px 14px;
+      border-radius: 20px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.65;
+      font-weight: 650;
+      background: rgba(255, 255, 255, 0.40);
+      border: 1px solid rgba(255, 255, 255, 0.62);
+    }
+
+    .toast {
+      position: fixed;
+      left: 50%;
+      bottom: 24px;
+      z-index: 20;
+      transform: translateX(-50%) translateY(20px) scale(0.96);
+      max-width: calc(100% - 32px);
+      padding: 12px 16px;
+      border-radius: 999px;
+      color: #fff;
+      font-weight: 850;
+      background:
+        linear-gradient(135deg, rgba(17, 24, 39, 0.96), rgba(49, 46, 129, 0.96));
+      box-shadow: 0 20px 50px rgba(15, 23, 42, 0.22);
+      opacity: 0;
+      pointer-events: none;
+      transition: 260ms cubic-bezier(.2,.8,.2,1);
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0) scale(1);
+    }
+
+    .icon {
+      width: 18px;
+      height: 18px;
+      display: inline-block;
+      flex: 0 0 auto;
+      stroke: currentColor;
+      stroke-width: 2.2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      fill: none;
+    }
+
+    .icon-lg {
+      width: 22px;
+      height: 22px;
+    }
+
+    .mobile-only {
+      display: none;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *,
+      *::before,
+      *::after {
+        animation: none !important;
+        transition: none !important;
+        scroll-behavior: auto !important;
+      }
+    }
+
+    @media (max-width: 1060px) {
+      header.hero {
+        grid-template-columns: 1fr;
+      }
+
+      .hero-panel {
+        min-width: 0;
+      }
+
+      .grid {
+        grid-template-columns: 1fr;
+      }
+
+      .input-card {
+        position: relative;
+        top: auto;
+      }
+    }
+
+    @media (max-width: 760px) {
+      .app {
+        width: min(100% - 22px, 1220px);
+        padding-top: 12px;
+      }
+
+      .topbar {
+        border-radius: 26px;
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .topbar-meta {
+        padding: 0 8px 6px;
+        white-space: normal;
+      }
+
+      header.hero,
+      .card {
+        border-radius: 28px;
+      }
+
+      .brand h1 {
+        letter-spacing: -0.055em;
+      }
+
+      .row,
+      .row-people,
+      .item,
+      .person-item {
+        grid-template-columns: 1fr;
+      }
+
+      .summary-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .actions {
+        grid-template-columns: 1fr;
+      }
+
+      .section-title {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      button {
+        width: 100%;
+      }
+
+      .item .btn-danger,
+      .person-item .btn-danger {
+        width: 100%;
+      }
+
+      .settlement-card {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .amount-badge {
+        width: 100%;
+        justify-content: center;
+      }
+
+      .desktop-only {
+        display: none;
+      }
+
+      .mobile-only {
+        display: inline-flex;
+      }
+    }
+
+    @media (max-width: 420px) {
+      .app {
+        width: min(100% - 16px, 1220px);
+      }
+
+      header.hero,
+      .card {
+        padding: 16px;
+        border-radius: 24px;
+      }
+
+      .brand h1 {
+        font-size: 31px;
+      }
+
+      .hero-metric {
+        flex-direction: column;
+        gap: 4px;
+      }
+
+      input, select, button {
+        min-height: 46px;
+      }
+    }
+
+    @media print {
+      body {
+        background: #fff;
+      }
+
+      body::before,
+      body::after,
+      .topbar,
+      .input-card,
+      .actions,
+      .btn-danger,
+      .btn-soft,
+      button {
+        display: none !important;
+      }
+
+      .app {
+        width: 100%;
+        padding: 0;
+      }
+
+      header.hero,
+      .card {
+        box-shadow: none;
+        border: 1px solid #ddd;
+        background: #fff;
+      }
+
+      .grid {
+        grid-template-columns: 1fr;
+      }
+
+      .dashboard-card {
+        display: block;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="app">
+    <nav class="topbar" aria-label="Application bar">
+      <div class="logo">
+        <span class="logo-mark" aria-hidden="true">
+          <svg class="icon icon-lg" viewBox="0 0 24 24">
+            <path d="M4 19V5"/>
+            <path d="M4 19h16"/>
+            <path d="M8 16v-5"/>
+            <path d="M12 16V8"/>
+            <path d="M16 16v-3"/>
+          </svg>
+        </span>
+        Party Split
+      </div>
+      <div class="topbar-meta">
+        <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M20 6 9 17l-5-5"/>
+        </svg>
+        Enterprise-grade expense dashboard
+      </div>
+    </nav>
+
+    <header class="hero">
+      <div class="brand">
+        <div class="eyebrow">
+          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+            <rect x="3" y="4" width="18" height="18" rx="2"/>
+            <path d="M16 2v4"/>
+            <path d="M8 2v4"/>
+            <path d="M3 10h18"/>
+          </svg>
+          Expense Splitter Platform
+        </div>
+        <h1>Party Split Dashboard</h1>
+        <p>
+          สรุปค่าใช้จ่ายปาร์ตี้แบบมืออาชีพ หารเท่ากันทุกคน คำนวณยอดรับคืน/จ่ายเพิ่ม
+          และแนะนำวิธีโอนที่ง่ายที่สุดแบบอัตโนมัติ
+        </p>
+      </div>
+
+      <aside class="hero-panel" aria-label="System status">
+        <div class="hero-panel-title">
+          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M20 13c0 5-3.5 7-8 9-4.5-2-8-4-8-9V5l8-3 8 3v8Z"/>
+            <path d="m9 12 2 2 4-4"/>
+          </svg>
+          ข้อมูลและระบบ
+        </div>
+        <div class="hero-metric">
+          <span>Data Storage</span>
+          <strong>Local Device</strong>
+        </div>
+        <div class="hero-metric">
+          <span>Mode</span>
+          <strong>Light / Responsive</strong>
+        </div>
+        <div class="hero-metric">
+          <span>Status</span>
+          <strong>Ready</strong>
+        </div>
+      </aside>
+    </header>
+
+    <main class="grid">
+      <section class="card input-card">
+        <div class="section-title">
+          <div class="title-stack">
+            <span class="title-icon" aria-hidden="true">
+              <svg class="icon icon-lg" viewBox="0 0 24 24">
+                <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+                <circle cx="9" cy="7" r="4"/>
+                <path d="M22 21v-2a4 4 0 0 0-3-3.87"/>
+                <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+              </svg>
+            </span>
+            <div>
+              <h2>รายชื่อคนหาร</h2>
+              <span class="subtle">เพิ่มสมาชิกที่ร่วมแชร์ค่าใช้จ่าย</span>
+            </div>
+          </div>
+          <button class="btn-soft btn-small" onclick="resetExample()">
+            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
+              <path d="M3 3v5h5"/>
+            </svg>
+            โหลดตัวอย่าง
+          </button>
+        </div>
+
+        <div class="row-people">
+          <div>
+            <label for="personName">
+              <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M20 21a8 8 0 0 0-16 0"/>
+                <circle cx="12" cy="7" r="4"/>
+              </svg>
+              ชื่อ
+            </label>
+            <input id="personName" placeholder="เช่น ปุ๋ย" />
+          </div>
+          <button onclick="addPerson()">
+            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M5 12h14"/>
+              <path d="M12 5v14"/>
+            </svg>
+            เพิ่มคน
+          </button>
+        </div>
+
+        <div id="peopleList" class="list"></div>
+
+        <hr class="divider">
+
+        <div class="section-title" style="margin-bottom:14px;">
+          <div class="title-stack">
+            <span class="title-icon" aria-hidden="true">
+              <svg class="icon icon-lg" viewBox="0 0 24 24">
+                <path d="M12 2v20"/>
+                <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7H14a3.5 3.5 0 0 1 0 7H6"/>
+              </svg>
+            </span>
+            <div>
+              <h2>เพิ่มค่าใช้จ่าย</h2>
+              <span class="subtle">บันทึกรายการที่มีคนจ่ายไปก่อน</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="row">
+          <div>
+            <label for="expenseTitle">
+              <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                <path d="M14 2v6h6"/>
+                <path d="M16 13H8"/>
+                <path d="M16 17H8"/>
+                <path d="M10 9H8"/>
+              </svg>
+              รายการ
+            </label>
+            <input id="expenseTitle" placeholder="เช่น ค่าอาหาร" />
+          </div>
+          <div>
+            <label for="payer">
+              <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+                <circle cx="12" cy="12" r="10"/>
+                <path d="M12 6v6l4 2"/>
+              </svg>
+              คนจ่าย
+            </label>
+            <select id="payer"></select>
+          </div>
+          <button onclick="addExpense()">
+            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M20 6 9 17l-5-5"/>
+            </svg>
+            เพิ่ม
+          </button>
+        </div>
+
+        <div class="row" style="grid-template-columns: 1fr auto;">
+          <div>
+            <label for="amount">
+              <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M12 2v20"/>
+                <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7H14a3.5 3.5 0 0 1 0 7H6"/>
+              </svg>
+              จำนวนเงิน
+            </label>
+            <input id="amount" type="number" min="0" step="0.01" placeholder="เช่น 250" />
+          </div>
+          <button class="btn-soft" onclick="clearExpenseInputs()">
+            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M3 6h18"/>
+              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/>
+              <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+            </svg>
+            ล้างช่อง
+          </button>
+        </div>
+
+        <div id="expenseList" class="list"></div>
+
+        <div class="actions">
+          <button onclick="copySummary()">
+            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+              <rect x="9" y="9" width="13" height="13" rx="2"/>
+              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+            </svg>
+            คัดลอกสรุป
+          </button>
+          <button class="btn-soft" onclick="downloadCSV()">
+            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <path d="M7 10l5 5 5-5"/>
+              <path d="M12 15V3"/>
+            </svg>
+            ดาวน์โหลด CSV
+          </button>
+          <button class="btn-soft" onclick="window.print()">
+            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M6 9V2h12v7"/>
+              <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/>
+              <path d="M6 14h12v8H6z"/>
+            </svg>
+            พิมพ์ / Save PDF
+          </button>
+          <button class="btn-danger" onclick="clearAll()">
+            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M3 6h18"/>
+              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/>
+              <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+              <path d="M10 11v6"/>
+              <path d="M14 11v6"/>
+            </svg>
+            ล้างข้อมูลทั้งหมด
+          </button>
+        </div>
+
+        <div class="note" style="margin-top:14px;">
+          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/>
+            <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+          </svg>
+          วิธีใช้: เพิ่มรายชื่อทุกคน → เพิ่มรายการค่าใช้จ่ายว่าใครจ่ายไปก่อน → ระบบจะคำนวณยอดเฉลี่ยและวิธีโอนให้ทันที
+        </div>
+      </section>
+
+      <section class="card dashboard-card">
+        <div class="section-title">
+          <div class="title-stack">
+            <span class="title-icon" aria-hidden="true">
+              <svg class="icon icon-lg" viewBox="0 0 24 24">
+                <path d="M3 3v18h18"/>
+                <path d="M18 17V9"/>
+                <path d="M13 17V5"/>
+                <path d="M8 17v-3"/>
+              </svg>
+            </span>
+            <div>
+              <h2>สรุปผลการหาร</h2>
+              <span class="subtle">Financial overview และ settlement plan</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="summary-grid">
+          <div class="stat">
+            <div class="label">
+              <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M12 2v20"/>
+                <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7H14a3.5 3.5 0 0 1 0 7H6"/>
+              </svg>
+              ยอดรวมทั้งหมด
+            </div>
+            <div id="totalAmount" class="value">0.00</div>
+            <div class="caption">Total expenses</div>
+          </div>
+          <div class="stat">
+            <div class="label">
+              <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+                <circle cx="9" cy="7" r="4"/>
+                <path d="M22 21v-2a4 4 0 0 0-3-3.87"/>
+              </svg>
+              จำนวนคน
+            </div>
+            <div id="totalPeople" class="value">0</div>
+            <div class="caption">Members</div>
+          </div>
+          <div class="stat">
+            <div class="label">
+              <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="m3 3 18 18"/>
+                <path d="M19.5 7.5A3.5 3.5 0 1 1 16 4"/>
+                <path d="M8 20a4 4 0 1 0 0-8"/>
+              </svg>
+              เฉลี่ยต่อคน
+            </div>
+            <div id="shareAmount" class="value">0.00</div>
+            <div class="caption">Equal share</div>
+          </div>
+        </div>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>ชื่อ</th>
+                <th>จ่ายไปแล้ว</th>
+                <th>ควรจ่าย</th>
+                <th>สถานะ</th>
+              </tr>
+            </thead>
+            <tbody id="summaryTable"></tbody>
+          </table>
+        </div>
+
+        <div class="section-title" style="margin-bottom:0;">
+          <div class="title-stack">
+            <span class="title-icon" aria-hidden="true">
+              <svg class="icon icon-lg" viewBox="0 0 24 24">
+                <path d="M7 7h10v10"/>
+                <path d="M7 17 17 7"/>
+                <path d="M3 12a9 9 0 1 0 9-9"/>
+              </svg>
+            </span>
+            <div>
+              <h2>วิธีโอนที่ง่ายที่สุด</h2>
+              <span class="subtle">ระบบจัดยอดโอนให้น้อยรายการที่สุดเท่าที่ทำได้</span>
+            </div>
+          </div>
+        </div>
+
+        <div id="settlementList" class="settlement"></div>
+
+        <div class="note">
+          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+            <circle cx="12" cy="12" r="10"/>
+            <path d="M12 16v-4"/>
+            <path d="M12 8h.01"/>
+          </svg>
+          หมายเหตุ: ระบบปัดเศษเป็นทศนิยม 2 ตำแหน่ง และปรับยอดรายการสุดท้ายให้ยอดรวมตรงที่สุด
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div id="toast" class="toast"></div>
+
+  <script>
+    const STORAGE_KEY = "party-split-webapp-v1";
+
+    let people = ["ปุ๋ย", "จุ๊บ", "ฮิง"];
+    let expenses = [
+      { title: "ค่าเหล้า+น้ำแข็ง+อาหาร", payer: "ปุ๋ย", amount: 451 },
+      { title: "ค่าอาหาร", payer: "จุ๊บ", amount: 250 }
+    ];
+
+    function formatMoney(value) {
+      return Number(value || 0).toLocaleString("th-TH", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      });
+    }
+
+    function round2(value) {
+      return Math.round((Number(value) + Number.EPSILON) * 100) / 100;
+    }
+
+    function save() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({ people, expenses }));
+    }
+
+    function load() {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return;
+      try {
+        const data = JSON.parse(raw);
+        if (Array.isArray(data.people) && Array.isArray(data.expenses)) {
+          people = data.people;
+          expenses = data.expenses;
+        }
+      } catch (error) {
+        console.warn("Cannot load saved data", error);
+      }
+    }
+
+    function showToast(message) {
+      const toast = document.getElementById("toast");
+      toast.textContent = message;
+      toast.classList.add("show");
+      setTimeout(() => toast.classList.remove("show"), 2200);
+    }
+
+    function render() {
+      renderPeople();
+      renderPayerOptions();
+      renderExpenses();
+      renderSummary();
+      save();
+    }
+
+    function renderPeople() {
+      const list = document.getElementById("peopleList");
+      list.innerHTML = "";
+
+      people.forEach((name, index) => {
+        const el = document.createElement("div");
+        el.className = "person-item";
+        el.innerHTML = `
+          <input value="${escapeHtml(name)}" oninput="renamePerson(${index}, this.value)" aria-label="แก้ไขชื่อ ${escapeHtml(name)}" />
+          <button class="btn-danger btn-small" onclick="removePerson(${index})">
+            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M3 6h18"/>
+              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/>
+              <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+            </svg>
+            ลบ
+          </button>
+        `;
+        list.appendChild(el);
+      });
+    }
+
+    function renderPayerOptions() {
+      const select = document.getElementById("payer");
+      select.innerHTML = people
+        .map(name => `<option value="${escapeHtml(name)}">${escapeHtml(name)}</option>`)
+        .join("");
+    }
+
+    function renderExpenses() {
+      const list = document.getElementById("expenseList");
+      list.innerHTML = "";
+
+      if (expenses.length === 0) {
+        list.innerHTML = `
+          <div class="note">
+            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <path d="M7 10l5 5 5-5"/>
+              <path d="M12 15V3"/>
+            </svg>
+            ยังไม่มีรายการค่าใช้จ่าย
+          </div>
+        `;
+        return;
+      }
+
+      expenses.forEach((expense, index) => {
+        const el = document.createElement("div");
+        el.className = "item";
+        el.innerHTML = `
+          <input value="${escapeHtml(expense.title)}" oninput="updateExpense(${index}, 'title', this.value)" aria-label="แก้ไขรายการ ${escapeHtml(expense.title)}" />
+          <select onchange="updateExpense(${index}, 'payer', this.value)" aria-label="เลือกคนจ่าย">
+            ${people.map(name => `
+              <option value="${escapeHtml(name)}" ${name === expense.payer ? "selected" : ""}>${escapeHtml(name)}</option>
+            `).join("")}
+          </select>
+          <input type="number" min="0" step="0.01" value="${expense.amount}" oninput="updateExpense(${index}, 'amount', this.value)" aria-label="แก้ไขจำนวนเงิน" />
+          <button class="btn-danger btn-small" onclick="removeExpense(${index})">
+            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M3 6h18"/>
+              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/>
+              <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+            </svg>
+            ลบ
+          </button>
+        `;
+        list.appendChild(el);
+      });
+    }
+
+    function renderSummary() {
+      const total = round2(expenses.reduce((sum, item) => sum + Number(item.amount || 0), 0));
+      const share = people.length ? round2(total / people.length) : 0;
+      const paidMap = Object.fromEntries(people.map(name => [name, 0]));
+
+      expenses.forEach(item => {
+        if (paidMap[item.payer] !== undefined) {
+          paidMap[item.payer] += Number(item.amount || 0);
+        }
+      });
+
+      document.getElementById("totalAmount").textContent = formatMoney(total);
+      document.getElementById("totalPeople").textContent = people.length;
+      document.getElementById("shareAmount").textContent = formatMoney(share);
+
+      const tbody = document.getElementById("summaryTable");
+      tbody.innerHTML = "";
+
+      people.forEach(name => {
+        const paid = round2(paidMap[name] || 0);
+        const balance = round2(paid - share);
+        let statusText = "พอดี";
+        let cls = "neutral";
+
+        if (balance > 0) {
+          statusText = `รับคืน ${formatMoney(balance)}`;
+          cls = "receive";
+        } else if (balance < 0) {
+          statusText = `ต้องจ่าย ${formatMoney(Math.abs(balance))}`;
+          cls = "pay";
+        }
+
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${escapeHtml(name)}</td>
+          <td>${formatMoney(paid)}</td>
+          <td>${formatMoney(share)}</td>
+          <td><span class="${cls}">${statusText}</span></td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      renderSettlements(paidMap, share);
+    }
+
+    function renderSettlements(paidMap, share) {
+      const list = document.getElementById("settlementList");
+      list.innerHTML = "";
+
+      if (people.length === 0) {
+        list.innerHTML = `
+          <div class="note">
+            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M5 12h14"/>
+              <path d="M12 5v14"/>
+            </svg>
+            กรุณาเพิ่มรายชื่อก่อน
+          </div>
+        `;
+        return;
+      }
+
+      const debtors = [];
+      const creditors = [];
+
+      people.forEach(name => {
+        const balance = round2((paidMap[name] || 0) - share);
+        if (balance < -0.005) {
+          debtors.push({ name, amount: round2(Math.abs(balance)) });
+        } else if (balance > 0.005) {
+          creditors.push({ name, amount: round2(balance) });
+        }
+      });
+
+      let i = 0;
+      let j = 0;
+      const transfers = [];
+
+      while (i < debtors.length && j < creditors.length) {
+        const payAmount = round2(Math.min(debtors[i].amount, creditors[j].amount));
+        if (payAmount > 0) {
+          transfers.push({
+            from: debtors[i].name,
+            to: creditors[j].name,
+            amount: payAmount
+          });
+        }
+
+        debtors[i].amount = round2(debtors[i].amount - payAmount);
+        creditors[j].amount = round2(creditors[j].amount - payAmount);
+
+        if (debtors[i].amount <= 0.005) i++;
+        if (creditors[j].amount <= 0.005) j++;
+      }
+
+      const totalDebt = transfers.reduce((sum, t) => sum + t.amount, 0);
+      const expectedDebt = people.reduce((sum, name) => {
+        const balance = round2((paidMap[name] || 0) - share);
+        return balance < 0 ? round2(sum + Math.abs(balance)) : sum;
+      }, 0);
+
+      const diff = round2(expectedDebt - totalDebt);
+      if (Math.abs(diff) >= 0.01 && transfers.length) {
+        transfers[transfers.length - 1].amount = round2(transfers[transfers.length - 1].amount + diff);
+      }
+
+      if (transfers.length === 0) {
+        list.innerHTML = `
+          <div class="settlement-card">
+            <strong>ไม่มีใครต้องโอนเพิ่ม</strong>
+            <span class="amount-badge">
+              <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M20 6 9 17l-5-5"/>
+              </svg>
+              ลงตัวแล้ว
+            </span>
+          </div>
+        `;
+        return;
+      }
+
+      transfers.forEach(item => {
+        const el = document.createElement("div");
+        el.className = "settlement-card";
+        el.innerHTML = `
+          <strong>${escapeHtml(item.from)} → ${escapeHtml(item.to)}</strong>
+          <span class="amount-badge">
+            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M12 2v20"/>
+              <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7H14a3.5 3.5 0 0 1 0 7H6"/>
+            </svg>
+            ${formatMoney(item.amount)} บาท
+          </span>
+        `;
+        list.appendChild(el);
+      });
+    }
+
+    function addPerson() {
+      const input = document.getElementById("personName");
+      const name = input.value.trim();
+
+      if (!name) {
+        showToast("กรุณากรอกชื่อก่อน");
+        return;
+      }
+
+      if (people.includes(name)) {
+        showToast("มีชื่อนี้อยู่แล้ว");
+        return;
+      }
+
+      people.push(name);
+      input.value = "";
+      render();
+      showToast("เพิ่มคนเรียบร้อย");
+    }
+
+    function renamePerson(index, newName) {
+      const oldName = people[index];
+      const cleanName = newName.trim();
+
+      if (!cleanName) return;
+
+      people[index] = cleanName;
+      expenses = expenses.map(item => item.payer === oldName ? { ...item, payer: cleanName } : item);
+      renderPayerOptions();
+      renderExpenses();
+      renderSummary();
+      save();
+    }
+
+    function removePerson(index) {
+      const name = people[index];
+      const hasExpense = expenses.some(item => item.payer === name);
+
+      if (hasExpense && !confirm(`มีรายการที่ ${name} เป็นคนจ่ายอยู่ ต้องการลบจริงไหม?`)) {
+        return;
+      }
+
+      people.splice(index, 1);
+      expenses = expenses.filter(item => item.payer !== name);
+      render();
+      showToast("ลบรายชื่อแล้ว");
+    }
+
+    function addExpense() {
+      const title = document.getElementById("expenseTitle").value.trim();
+      const payer = document.getElementById("payer").value;
+      const amount = Number(document.getElementById("amount").value);
+
+      if (!title) {
+        showToast("กรุณากรอกรายการ");
+        return;
+      }
+
+      if (!payer) {
+        showToast("กรุณาเลือกคนจ่าย");
+        return;
+      }
+
+      if (!amount || amount <= 0) {
+        showToast("กรุณากรอกจำนวนเงินให้ถูกต้อง");
+        return;
+      }
+
+      expenses.push({ title, payer, amount: round2(amount) });
+      clearExpenseInputs();
+      render();
+      showToast("เพิ่มค่าใช้จ่ายเรียบร้อย");
+    }
+
+    function updateExpense(index, field, value) {
+      if (field === "amount") {
+        expenses[index][field] = round2(Number(value || 0));
+      } else {
+        expenses[index][field] = value;
+      }
+      renderSummary();
+      save();
+    }
+
+    function removeExpense(index) {
+      expenses.splice(index, 1);
+      render();
+      showToast("ลบรายการแล้ว");
+    }
+
+    function clearExpenseInputs() {
+      document.getElementById("expenseTitle").value = "";
+      document.getElementById("amount").value = "";
+    }
+
+    function clearAll() {
+      if (!confirm("ต้องการล้างข้อมูลทั้งหมดจริงไหม?")) return;
+      people = [];
+      expenses = [];
+      render();
+      showToast("ล้างข้อมูลแล้ว");
+    }
+
+    function resetExample() {
+      people = ["ปุ๋ย", "จุ๊บ", "ฮิง"];
+      expenses = [
+        { title: "ค่าเหล้า+น้ำแข็ง+อาหาร", payer: "ปุ๋ย", amount: 451 },
+        { title: "ค่าอาหาร", payer: "จุ๊บ", amount: 250 }
+      ];
+      render();
+      showToast("โหลดตัวอย่างเรียบร้อย");
+    }
+
+    function getSummaryText() {
+      const total = round2(expenses.reduce((sum, item) => sum + Number(item.amount || 0), 0));
+      const share = people.length ? round2(total / people.length) : 0;
+      const paidMap = Object.fromEntries(people.map(name => [name, 0]));
+
+      expenses.forEach(item => {
+        if (paidMap[item.payer] !== undefined) {
+          paidMap[item.payer] += Number(item.amount || 0);
+        }
+      });
+
+      const lines = [];
+      lines.push("สรุปค่าใช้จ่าย Party Split");
+      lines.push(`ยอดรวมทั้งหมด: ${formatMoney(total)} บาท`);
+      lines.push(`จำนวนคน: ${people.length} คน`);
+      lines.push(`เฉลี่ยต่อคน: ${formatMoney(share)} บาท`);
+      lines.push("");
+      lines.push("สถานะรายคน:");
+
+      people.forEach(name => {
+        const paid = round2(paidMap[name] || 0);
+        const balance = round2(paid - share);
+        if (balance > 0) {
+          lines.push(`- ${name}: จ่ายไปแล้ว ${formatMoney(paid)} บาท / รับคืน ${formatMoney(balance)} บาท`);
+        } else if (balance < 0) {
+          lines.push(`- ${name}: จ่ายไปแล้ว ${formatMoney(paid)} บาท / ต้องจ่าย ${formatMoney(Math.abs(balance))} บาท`);
+        } else {
+          lines.push(`- ${name}: ลงตัวแล้ว`);
+        }
+      });
+
+      const cards = Array.from(document.querySelectorAll(".settlement-card"))
+        .map(card => card.innerText.replace(/\n/g, " "));
+
+      lines.push("");
+      lines.push("วิธีโอน:");
+      cards.forEach(card => lines.push(`- ${card}`));
+
+      return lines.join("\n");
+    }
+
+    async function copySummary() {
+      const text = getSummaryText();
+      try {
+        await navigator.clipboard.writeText(text);
+        showToast("คัดลอกสรุปแล้ว");
+      } catch (error) {
+        showToast("คัดลอกไม่สำเร็จ");
+      }
+    }
+
+    function downloadCSV() {
+      const rows = [
+        ["รายการ", "คนจ่าย", "จำนวนเงิน"],
+        ...expenses.map(item => [item.title, item.payer, item.amount])
+      ];
+
+      const csv = rows
+        .map(row => row.map(value => `"${String(value).replace(/"/g, '""')}"`).join(","))
+        .join("\n");
+
+      const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "party-split-expenses.csv";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      showToast("ดาวน์โหลด CSV แล้ว");
+    }
+
+    function escapeHtml(value) {
+      return String(value)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    document.getElementById("personName").addEventListener("keydown", (event) => {
+      if (event.key === "Enter") addPerson();
+    });
+
+    document.getElementById("amount").addEventListener("keydown", (event) => {
+      if (event.key === "Enter") addExpense();
+    });
+
+    load();
+    render();
+  </script>
+</body>
+</html>

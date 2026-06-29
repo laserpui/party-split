@@ -1,8 +1,9 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="th">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <base target="_top">
   <title>Party Split | Enterprise Expense Dashboard</title>
 
   <style>
@@ -1229,7 +1230,7 @@
         <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
           <path d="M20 6 9 17l-5-5"/>
         </svg>
-        Enterprise-grade expense dashboard
+        <span id="syncStatus">กำลังเชื่อมต่อ Google Sheet...</span>
       </div>
     </nav>
 
@@ -1261,7 +1262,7 @@
         </div>
         <div class="hero-metric">
           <span>Data Storage</span>
-          <strong>Local Device</strong>
+          <strong>Google Sheet</strong>
         </div>
         <div class="hero-metric">
           <span>Mode</span>
@@ -1575,12 +1576,15 @@
 
   <script>
     const STORAGE_KEY = "party-split-webapp-v1";
+    const ADMIN_PASSWORD = "Admin1234";
+    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwub6JT3Z6GLVJQO9IJJui9cw7JVTxRBhsPf_0sO7Jej2umZ2QhyctdmeHZrhAS4Giv/exec";
 
-    let people = ["ปุ๋ย", "จุ๊บ", "ฮิง"];
-    let expenses = [
-      { title: "ค่าเหล้า+น้ำแข็ง+อาหาร", payer: "ปุ๋ย", amount: 451 },
-      { title: "ค่าอาหาร", payer: "จุ๊บ", amount: 250 }
-    ];
+    let people = [];
+    let expenses = [];
+    let cloudReady = false;
+    let isHydrating = false;
+    let saveTimer = null;
+    let lastSaveHash = "";
 
     function formatMoney(value) {
       return Number(value || 0).toLocaleString("th-TH", {
@@ -1593,24 +1597,244 @@
       return Math.round((Number(value) + Number.EPSILON) * 100) / 100;
     }
 
-    function save() {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify({ people, expenses }));
+    function hasAppsScriptRuntime() {
+      return typeof google !== "undefined" && Boolean(google.script && google.script.run);
     }
 
-    function load() {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (!raw) return;
-      try {
-        const data = JSON.parse(raw);
-        if (Array.isArray(data.people) && Array.isArray(data.expenses)) {
-          people = data.people;
-          expenses = data.expenses;
-        }
-      } catch (error) {
-        console.warn("Cannot load saved data", error);
+    function isCloudMode() {
+      return hasAppsScriptRuntime() || Boolean(WEB_APP_URL);
+    }
+
+    function setSyncStatus(message) {
+      const status = document.getElementById("syncStatus");
+      if (status) {
+        status.textContent = message;
       }
     }
 
+    function callBackend(action, params = {}) {
+      if (hasAppsScriptRuntime()) {
+        return new Promise((resolve, reject) => {
+          const runner = google.script.run
+            .withSuccessHandler(resolve)
+            .withFailureHandler(reject);
+
+          if (action === "getData") {
+            runner.getData();
+          } else if (action === "saveData") {
+            runner.saveData(params.payload || {});
+          } else if (action === "clearData") {
+            runner.clearData(params.password || "");
+          } else if (action === "validateAdminPassword") {
+            runner.validateAdminPassword(params.password || "");
+          } else {
+            reject(new Error("Unknown backend action"));
+          }
+        });
+      }
+
+      return new Promise((resolve, reject) => {
+        if (!WEB_APP_URL) {
+          reject(new Error("Missing Apps Script API URL"));
+          return;
+        }
+
+        const callbackName = `partySplitApi_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+        const query = new URLSearchParams({ action, callback: callbackName });
+
+        if (params.payload !== undefined) {
+          query.set("payload", JSON.stringify(params.payload));
+        }
+
+        if (params.password !== undefined) {
+          query.set("password", params.password);
+        }
+
+        const script = document.createElement("script");
+        const cleanup = () => {
+          delete window[callbackName];
+          script.remove();
+        };
+
+        window[callbackName] = (response) => {
+          cleanup();
+          resolve(response);
+        };
+
+        script.onerror = () => {
+          cleanup();
+          reject(new Error("Cannot connect to Apps Script API"));
+        };
+
+        script.src = `${WEB_APP_URL}?${query.toString()}`;
+        document.body.appendChild(script);
+      });
+    }
+
+    async function verifyAdminPassword(password) {
+      const value = String(password || "");
+
+      if (!isCloudMode()) {
+        const ok = value === ADMIN_PASSWORD;
+        return {
+          ok,
+          error: ok ? "" : "รหัสไม่ถูกต้อง ไม่สามารถล้างข้อมูลได้"
+        };
+      }
+
+      setSyncStatus("กำลังตรวจสอบรหัส Admin...");
+
+      try {
+        const response = await callBackend("validateAdminPassword", { password: value });
+
+        if (response && response.ok) {
+          setSyncStatus("ตรวจสอบรหัส Admin แล้ว");
+          return { ok: true, error: "" };
+        }
+
+        setSyncStatus("ตรวจสอบรหัสไม่สำเร็จ");
+        return {
+          ok: false,
+          error: response && response.error ? response.error : "รหัสไม่ถูกต้อง ไม่สามารถล้างข้อมูลได้"
+        };
+      } catch (error) {
+        console.error(error);
+        setSyncStatus("ตรวจสอบรหัสไม่สำเร็จ");
+        return { ok: false, error: "ตรวจสอบรหัส Admin ไม่สำเร็จ" };
+      }
+    }
+    function getCurrentData() {
+      return {
+        people: [...people],
+        expenses: expenses.map(item => ({
+          title: String(item.title || ""),
+          payer: String(item.payer || ""),
+          amount: round2(Number(item.amount || 0))
+        }))
+      };
+    }
+
+    function normalizeClientData(data) {
+      const safeData = data && typeof data === "object" ? data : {};
+      const safePeople = Array.isArray(safeData.people) ? safeData.people : [];
+      const safeExpenses = Array.isArray(safeData.expenses) ? safeData.expenses : [];
+
+      return {
+        people: [...new Set(safePeople.map(name => String(name || "").trim()).filter(Boolean))],
+        expenses: safeExpenses
+          .map(item => ({
+            title: String(item.title || "").trim(),
+            payer: String(item.payer || "").trim(),
+            amount: round2(Number(item.amount || 0))
+          }))
+          .filter(item => item.title && item.payer && item.amount > 0)
+      };
+    }
+
+    function saveLocalCache() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(getCurrentData()));
+    }
+
+    function loadLocalCache() {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return;
+      try {
+        const data = normalizeClientData(JSON.parse(raw));
+        people = data.people;
+        expenses = data.expenses;
+      } catch (error) {
+        console.warn("Cannot load saved local cache", error);
+      }
+    }
+
+    function save() {
+      if (isHydrating) return;
+
+      saveLocalCache();
+
+      if (!isCloudMode()) {
+        setSyncStatus("Local Mode - ข้อมูลอยู่เฉพาะเครื่องนี้");
+        return;
+      }
+
+      if (!cloudReady) {
+        setSyncStatus("กำลังรอเชื่อมต่อ Google Sheet...");
+        return;
+      }
+
+      queueCloudSave();
+    }
+
+    function load() {
+      loadLocalCache();
+    }
+
+    async function initCloudSync() {
+      if (!isCloudMode()) {
+        setSyncStatus("Local Mode - ข้อมูลอยู่เฉพาะเครื่องนี้");
+        return;
+      }
+
+      setSyncStatus("กำลังโหลดข้อมูลจาก Google Sheet...");
+
+      try {
+        const response = await callBackend("getData");
+
+        if (!response || !response.ok) {
+          setSyncStatus("โหลดข้อมูลไม่สำเร็จ");
+          showToast("โหลดข้อมูลจาก Google Sheet ไม่สำเร็จ");
+          return;
+        }
+
+        const data = normalizeClientData(response.data);
+
+        isHydrating = true;
+        people = data.people;
+        expenses = data.expenses;
+        render();
+        isHydrating = false;
+
+        cloudReady = true;
+        lastSaveHash = JSON.stringify(getCurrentData());
+        saveLocalCache();
+
+        setSyncStatus("เชื่อมต่อ Google Sheet แล้ว");
+        showToast("โหลดข้อมูลจาก Google Sheet แล้ว");
+      } catch (error) {
+        console.error(error);
+        setSyncStatus("เชื่อมต่อ Google Sheet ไม่สำเร็จ");
+        showToast("เชื่อมต่อ Google Sheet ไม่สำเร็จ");
+      }
+    }
+    function queueCloudSave() {
+      const data = getCurrentData();
+      const hash = JSON.stringify(data);
+
+      if (hash === lastSaveHash) {
+        return;
+      }
+
+      setSyncStatus("กำลังบันทึกลง Google Sheet...");
+      clearTimeout(saveTimer);
+
+      saveTimer = setTimeout(async () => {
+        try {
+          const response = await callBackend("saveData", { payload: data });
+
+          if (response && response.ok) {
+            lastSaveHash = hash;
+            setSyncStatus("บันทึกลง Google Sheet แล้ว");
+          } else {
+            setSyncStatus("บันทึกไม่สำเร็จ");
+            showToast(response && response.error ? response.error : "บันทึกลง Google Sheet ไม่สำเร็จ");
+          }
+        } catch (error) {
+          console.error(error);
+          setSyncStatus("บันทึกไม่สำเร็จ");
+          showToast("บันทึกลง Google Sheet ไม่สำเร็จ");
+        }
+      }, 650);
+    }
     function showToast(message) {
       const toast = document.getElementById("toast");
       toast.textContent = message;
@@ -1983,6 +2207,11 @@
 
       if (!cleanName) return;
 
+      if (people.some((name, personIndex) => personIndex !== index && name === cleanName)) {
+        showToast("มีชื่อนี้อยู่แล้ว");
+        return;
+      }
+
       people[index] = cleanName;
       expenses = expenses.map(item => item.payer === oldName ? { ...item, payer: cleanName } : item);
       renderPayerOptions();
@@ -2093,15 +2322,16 @@
         inputType: "password",
         inputLabel: "Admin Password",
         inputPlaceholder: "กรอกรหัส Admin",
-        inputHelper: "คำใบ้: ใช้รหัสที่กำหนดไว้สำหรับผู้ดูแลระบบ"
+        inputHelper: "ระบบจะตรวจสอบรหัสก่อนอนุญาตให้ล้างข้อมูล"
       });
 
       if (!auth.confirmed) {
         return;
       }
 
-      if (auth.value !== "Admin1234") {
-        showToast("รหัสไม่ถูกต้อง ไม่สามารถล้างข้อมูลได้");
+      const adminCheck = await verifyAdminPassword(auth.value);
+      if (!adminCheck.ok) {
+        showToast(adminCheck.error);
         return;
       }
 
@@ -2109,8 +2339,7 @@
         variant: "danger",
         kicker: "Danger Zone",
         title: "ล้างข้อมูลทั้งหมด?",
-        message: `รหัสถูกต้องแล้ว
-หากดำเนินการต่อ รายชื่อและรายการค่าใช้จ่ายทั้งหมดในเครื่องนี้จะถูกลบออก`,
+        message: `หากดำเนินการต่อ รายชื่อและรายการค่าใช้จ่ายทั้งหมดจะถูกลบออก`,
         confirmText: "ล้างข้อมูลทั้งหมด",
         cancelText: "ยกเลิก"
       });
@@ -2119,6 +2348,36 @@
         return;
       }
 
+      if (isCloudMode() && cloudReady) {
+        setSyncStatus("กำลังล้างข้อมูลใน Google Sheet...");
+
+        try {
+          const response = await callBackend("clearData", { password: auth.value });
+
+          if (!response || !response.ok) {
+            showToast(response && response.error ? response.error : "ไม่สามารถล้างข้อมูลได้");
+            setSyncStatus("ล้างข้อมูลไม่สำเร็จ");
+            return;
+          }
+
+          isHydrating = true;
+          people = [];
+          expenses = [];
+          render();
+          isHydrating = false;
+
+          lastSaveHash = JSON.stringify(getCurrentData());
+          saveLocalCache();
+          setSyncStatus("ล้างข้อมูลใน Google Sheet แล้ว");
+          showToast("ล้างข้อมูลแล้ว");
+        } catch (error) {
+          console.error(error);
+          setSyncStatus("ล้างข้อมูลไม่สำเร็จ");
+          showToast("ไม่สามารถล้างข้อมูลได้");
+        }
+
+        return;
+      }
       people = [];
       expenses = [];
       render();
@@ -2227,6 +2486,7 @@
 
     load();
     render();
+    initCloudSync();
   </script>
 </body>
 </html>

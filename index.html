@@ -1453,16 +1453,16 @@
         <div id="expenseList" class="list"></div>
 
         <div class="actions">
-          <button onclick="downloadSummaryImage()">
+          <button onclick="downloadExpenseListImage()">
             <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
               <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
               <path d="M7 10l5 5 5-5"/>
               <path d="M12 15V3"/>
             </svg>
-            บันทึกภาพ
+            บันทึกรายการ
           </button>
 
-          <button onclick="shareSummaryImage()">
+          <button onclick="shareExpenseListImage()">
             <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
               <circle cx="18" cy="5" r="3"/>
               <circle cx="6" cy="12" r="3"/>
@@ -1470,7 +1470,7 @@
               <path d="m8.59 13.51 6.83 3.98"/>
               <path d="m15.41 6.51-6.82 3.98"/>
             </svg>
-            แชร์รูป
+            แชร์รายการ
           </button>
 
           <button class="btn-danger" onclick="clearAll()">
@@ -1569,6 +1569,28 @@
         </div>
 
         <div id="settlementList" class="settlement"></div>
+
+        <div class="actions">
+          <button onclick="downloadSummaryImage()">
+            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <path d="M7 10l5 5 5-5"/>
+              <path d="M12 15V3"/>
+            </svg>
+            บันทึกสรุป
+          </button>
+
+          <button onclick="shareSummaryImage()">
+            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+              <circle cx="18" cy="5" r="3"/>
+              <circle cx="6" cy="12" r="3"/>
+              <circle cx="18" cy="19" r="3"/>
+              <path d="m8.59 13.51 6.83 3.98"/>
+              <path d="m15.41 6.51-6.82 3.98"/>
+            </svg>
+            แชร์สรุป
+          </button>
+        </div>
 
         <div class="note">
           <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
@@ -2852,6 +2874,198 @@
 
       return canvasBlob(canvas);
     }
+    async function createExpenseListImageBlob() {
+      const total = round2(expenses.reduce((sum, item) => sum + Number(item.amount || 0), 0));
+      const rows = expenses.map((item, index) => ({
+        index: index + 1,
+        title: String(item.title || ""),
+        payer: String(item.payer || ""),
+        amount: round2(Number(item.amount || 0)),
+        kind: item.isAlcohol ? "แอลกอฮอล์" : "ทั่วไป"
+      }));
+
+      const canvas = document.createElement("canvas");
+      const ctx = canvas.getContext("2d");
+      const scale = Math.min(window.devicePixelRatio || 1, 2);
+      const width = 980;
+      const padding = 48;
+      const tableX = padding;
+      const tableWidth = width - padding * 2;
+      const rowHeight = 66;
+      const tableHeight = 58 + rows.length * rowHeight;
+      const height = Math.max(620, padding * 2 + 120 + 98 + tableHeight + 42);
+
+      canvas.width = width * scale;
+      canvas.height = height * scale;
+      canvas.style.width = `${width}px`;
+      canvas.style.height = `${height}px`;
+      ctx.scale(scale, scale);
+
+      const gradient = ctx.createLinearGradient(0, 0, width, height);
+      gradient.addColorStop(0, "#eef7ff");
+      gradient.addColorStop(0.55, "#fffdf4");
+      gradient.addColorStop(1, "#ffeef5");
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, width, height);
+
+      ctx.fillStyle = "rgba(255,255,255,0.76)";
+      ctx.strokeStyle = "rgba(199,210,254,0.9)";
+      ctx.lineWidth = 2;
+      drawRoundedRect(ctx, 24, 24, width - 48, height - 48, 34);
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.fillStyle = "#111827";
+      ctx.font = "900 44px 'Noto Sans Thai', 'Segoe UI', Tahoma, sans-serif";
+      ctx.textAlign = "left";
+      ctx.fillText("รายการค่าใช้จ่าย", padding, 86);
+
+      ctx.fillStyle = "#6b7280";
+      ctx.font = "700 20px 'Noto Sans Thai', 'Segoe UI', Tahoma, sans-serif";
+      ctx.fillText(new Date().toLocaleString("th-TH", { dateStyle: "medium", timeStyle: "short" }), padding, 120);
+
+      const statY = 152;
+      const statGap = 14;
+      const statWidth = (tableWidth - statGap) / 2;
+      const statItems = [
+        ["ยอดรวมทั้งหมด", `${formatMoney(total)} บาท`],
+        ["จำนวนรายการ", `${rows.length} รายการ`]
+      ];
+
+      statItems.forEach(([label, value], index) => {
+        const x = tableX + index * (statWidth + statGap);
+        drawRoundedRect(ctx, x, statY, statWidth, 82, 22);
+        ctx.fillStyle = "rgba(255,255,255,0.82)";
+        ctx.fill();
+        ctx.strokeStyle = "rgba(226,232,240,0.95)";
+        ctx.stroke();
+        ctx.fillStyle = "#6b7280";
+        ctx.font = "800 17px 'Noto Sans Thai', 'Segoe UI', Tahoma, sans-serif";
+        ctx.fillText(label, x + 20, statY + 28);
+        ctx.fillStyle = "#111827";
+        ctx.font = "900 26px 'Noto Sans Thai', 'Segoe UI', Tahoma, sans-serif";
+        ctx.fillText(value, x + 20, statY + 60);
+      });
+
+      const tableY = statY + 112;
+      drawRoundedRect(ctx, tableX, tableY, tableWidth, tableHeight, 24);
+      ctx.fillStyle = "rgba(255,255,255,0.84)";
+      ctx.fill();
+      ctx.strokeStyle = "rgba(226,232,240,0.95)";
+      ctx.stroke();
+
+      const colNo = tableX + 24;
+      const colTitle = tableX + 82;
+      const colPayer = tableX + 560;
+      const colAmount = tableX + tableWidth - 24;
+
+      ctx.fillStyle = "#6b7280";
+      ctx.font = "900 18px 'Noto Sans Thai', 'Segoe UI', Tahoma, sans-serif";
+      ctx.textAlign = "left";
+      ctx.fillText("#", colNo, tableY + 36);
+      ctx.fillText("รายการ", colTitle, tableY + 36);
+      ctx.fillText("คนจ่าย", colPayer, tableY + 36);
+      ctx.textAlign = "right";
+      ctx.fillText("จำนวนเงิน", colAmount, tableY + 36);
+
+      ctx.strokeStyle = "rgba(226,232,240,0.95)";
+      ctx.beginPath();
+      ctx.moveTo(tableX, tableY + 58);
+      ctx.lineTo(tableX + tableWidth, tableY + 58);
+      ctx.stroke();
+
+      rows.forEach((row, index) => {
+        const y = tableY + 58 + index * rowHeight;
+        if (index > 0) {
+          ctx.strokeStyle = "rgba(226,232,240,0.9)";
+          ctx.beginPath();
+          ctx.moveTo(tableX, y);
+          ctx.lineTo(tableX + tableWidth, y);
+          ctx.stroke();
+        }
+
+        ctx.textAlign = "left";
+        ctx.fillStyle = "#6b7280";
+        ctx.font = "800 18px 'Noto Sans Thai', 'Segoe UI', Tahoma, sans-serif";
+        ctx.fillText(String(row.index), colNo, y + 40);
+
+        const titleLines = wrapCanvasText(ctx, row.title, 410).slice(0, 2);
+        ctx.fillStyle = "#111827";
+        ctx.font = "900 21px 'Noto Sans Thai', 'Segoe UI', Tahoma, sans-serif";
+        ctx.fillText(titleLines[0] || "-", colTitle, y + 30);
+        if (titleLines[1]) {
+          ctx.fillStyle = "#6b7280";
+          ctx.font = "700 16px 'Noto Sans Thai', 'Segoe UI', Tahoma, sans-serif";
+          ctx.fillText(titleLines[1], colTitle, y + 54);
+        } else if (row.kind === "แอลกอฮอล์") {
+          ctx.fillStyle = "#7c3aed";
+          ctx.font = "800 16px 'Noto Sans Thai', 'Segoe UI', Tahoma, sans-serif";
+          ctx.fillText("รายการแอลกอฮอล์", colTitle, y + 54);
+        }
+
+        ctx.fillStyle = "#1f2937";
+        ctx.font = "800 20px 'Noto Sans Thai', 'Segoe UI', Tahoma, sans-serif";
+        ctx.fillText(row.payer || "-", colPayer, y + 40);
+
+        ctx.textAlign = "right";
+        ctx.fillStyle = "#111827";
+        ctx.font = "900 21px 'Noto Sans Thai', 'Segoe UI', Tahoma, sans-serif";
+        ctx.fillText(`${formatMoney(row.amount)} บาท`, colAmount, y + 40);
+      });
+
+      ctx.fillStyle = "#6b7280";
+      ctx.font = "700 17px 'Noto Sans Thai', 'Segoe UI', Tahoma, sans-serif";
+      ctx.textAlign = "left";
+      ctx.fillText("สร้างจาก Party Split Dashboard", padding, height - 52);
+
+      return canvasBlob(canvas);
+    }
+
+    async function downloadExpenseListImage() {
+      if (!expenses.length) {
+        showToast("กรุณาเพิ่มรายการก่อนบันทึกภาพ");
+        return;
+      }
+
+      try {
+        const blob = await createExpenseListImageBlob();
+        downloadBlob(blob, "party-split-expenses.png");
+        showToast("บันทึกรูปรายการแล้ว");
+      } catch (error) {
+        console.error(error);
+        showToast("บันทึกรายการไม่สำเร็จ");
+      }
+    }
+
+    async function shareExpenseListImage() {
+      if (!expenses.length) {
+        showToast("กรุณาเพิ่มรายการก่อนแชร์");
+        return;
+      }
+
+      try {
+        const blob = await createExpenseListImageBlob();
+
+        if (navigator.share && navigator.canShare && typeof File !== "undefined") {
+          const file = new File([blob], "party-split-expenses.png", { type: "image/png" });
+          if (navigator.canShare({ files: [file] })) {
+            await navigator.share({
+              files: [file],
+              title: "Party Split Expenses",
+              text: "รายการค่าใช้จ่าย Party Split"
+            });
+            showToast("เปิดเมนูแชร์แล้ว");
+            return;
+          }
+        }
+
+        downloadBlob(blob, "party-split-expenses.png");
+        showToast("ดาวน์โหลดรูปรายการแล้ว");
+      } catch (error) {
+        console.error(error);
+        showToast("แชร์รายการไม่สำเร็จ");
+      }
+    }
     function downloadBlob(blob, filename) {
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
@@ -2865,7 +3079,7 @@
 
     async function downloadSummaryImage() {
       if (!people.length || !expenses.length) {
-        showToast("กรุณาเพิ่มข้อมูลก่อนบันทึกภาพ");
+        showToast("กรุณาเพิ่มข้อมูลก่อนบันทึกสรุป");
         return;
       }
 
@@ -2881,7 +3095,7 @@
 
     async function shareSummaryImage() {
       if (!people.length || !expenses.length) {
-        showToast("กรุณาเพิ่มข้อมูลก่อนแชร์รูป");
+        showToast("กรุณาเพิ่มข้อมูลก่อนแชร์สรุป");
         return;
       }
 
@@ -2931,6 +3145,10 @@
   </script>
 </body>
 </html>
+
+
+
+
 
 
 

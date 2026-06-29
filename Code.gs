@@ -305,6 +305,7 @@ function normalizeData_(payload) {
   const source = payload && typeof payload === 'object' ? payload : {};
   const rawPeople = Array.isArray(source.people) ? source.people : [];
   const rawExpenses = Array.isArray(source.expenses) ? source.expenses : [];
+  const rawNonDrinkers = Array.isArray(source.nonDrinkers) ? source.nonDrinkers : [];
 
   const people = [];
   rawPeople.forEach((name) => {
@@ -314,16 +315,43 @@ function normalizeData_(payload) {
     }
   });
 
+  const nonDrinkers = [];
+  rawNonDrinkers.forEach((name) => {
+    const cleanName = String(name || '').trim();
+    if (cleanName && people.indexOf(cleanName) !== -1 && nonDrinkers.indexOf(cleanName) === -1) {
+      nonDrinkers.push(cleanName);
+    }
+  });
+
   const expenses = rawExpenses
-    .map((item) => ({
-      title: String(item && item.title ? item.title : '').trim(),
-      payer: String(item && item.payer ? item.payer : '').trim(),
-      amount: round2_(Number(item && item.amount ? item.amount : 0))
-    }))
-    .filter((item) => item.title && item.payer && item.amount > 0);
+    .map((item) => {
+      const isAlcohol = Boolean(item && item.isAlcohol);
+      const fallbackParticipants = isAlcohol
+        ? people.filter((name) => nonDrinkers.indexOf(name) === -1)
+        : people;
+      const rawParticipants = Array.isArray(item && item.participants) ? item.participants : fallbackParticipants;
+      const participants = [];
+
+      rawParticipants.forEach((name) => {
+        const cleanName = String(name || '').trim();
+        if (cleanName && people.indexOf(cleanName) !== -1 && participants.indexOf(cleanName) === -1) {
+          participants.push(cleanName);
+        }
+      });
+
+      return {
+        title: String(item && item.title ? item.title : '').trim(),
+        payer: String(item && item.payer ? item.payer : '').trim(),
+        amount: round2_(Number(item && item.amount ? item.amount : 0)),
+        isAlcohol,
+        participants: participants.length ? participants : fallbackParticipants.slice()
+      };
+    })
+    .filter((item) => item.title && item.payer && item.amount > 0 && item.participants.length > 0);
 
   return {
     people,
+    nonDrinkers,
     expenses
   };
 }
@@ -331,6 +359,7 @@ function normalizeData_(payload) {
 function getEmptyData_() {
   return {
     people: [],
+    nonDrinkers: [],
     expenses: []
   };
 }
@@ -346,3 +375,4 @@ function getUser_() {
     return 'webapp';
   }
 }
+

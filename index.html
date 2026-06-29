@@ -551,12 +551,89 @@
       grid-template-columns: minmax(0, 1fr) auto;
     }
 
-    .item:hover,
-    .person-item:hover {
+    .person-controls {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      min-height: 40px;
+    }
+
+    .mini-check {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      min-height: 40px;
+      padding: 9px 12px;
+      border-radius: 15px;
+      border: 1px solid rgba(199, 210, 254, 0.74);
+      background: rgba(255, 255, 255, 0.62);
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 800;
+      cursor: pointer;
+      user-select: none;
+      transform: none;
+      transition: none;
+    }
+
+    .mini-check:hover,
+    .mini-check:focus-within {
+      background: rgba(255, 255, 255, 0.62);
+      border-color: rgba(199, 210, 254, 0.74);
+      box-shadow: none;
+      transform: none;
+    }
+
+    .mini-check input[type="checkbox"] {
+      flex: 0 0 16px;
+      width: 16px;
+      min-width: 16px;
+      max-width: 16px;
+      height: 16px;
+      min-height: 16px;
+      padding: 0;
+      margin: 0;
+      border: 0;
+      border-radius: 4px;
+      background: transparent;
+      box-shadow: none;
+      accent-color: var(--primary);
+      transform: none;
+      transition: none;
+    }
+
+    .mini-check input[type="checkbox"]:hover,
+    .mini-check input[type="checkbox"]:focus,
+    .mini-check input[type="checkbox"]:active {
+      background: transparent;
+      border: 0;
+      box-shadow: none;
+      outline: none;
+      transform: none;
+    }
+
+    .expense-kind {
+      width: fit-content;
+      margin-top: 2px;
+      margin-bottom: 4px;
+      color: var(--text);
+    }
+
+    .item:hover {
       transform: translateY(-2px);
       background: rgba(255, 255, 255, 0.66);
       border-color: rgba(255, 255, 255, 0.9);
       box-shadow: 0 16px 34px rgba(15, 23, 42, 0.08);
+    }
+
+    .person-item:hover {
+      background: rgba(255, 255, 255, 0.46);
+      border-color: rgba(255, 255, 255, 0.68);
+      box-shadow: 0 10px 26px rgba(15, 23, 42, 0.05);
+      transform: none;
     }
 
     .dashboard-card {
@@ -566,7 +643,7 @@
 
     .summary-grid {
       display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
+      grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 12px;
     }
 
@@ -785,7 +862,7 @@
 
     .actions {
       display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
       gap: 10px;
       margin-top: 16px;
     }
@@ -1140,6 +1217,12 @@
         width: 100%;
       }
 
+      .person-controls {
+        width: 100%;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(104px, auto);
+      }
+
       .settlement-card {
         align-items: flex-start;
         flex-direction: column;
@@ -1362,6 +1445,11 @@
           </button>
         </div>
 
+        <label class="mini-check expense-kind">
+          <input id="isAlcoholExpense" type="checkbox" />
+          รายการแอลกอฮอล์
+        </label>
+
         <div id="expenseList" class="list"></div>
 
         <div class="actions">
@@ -1371,6 +1459,17 @@
               <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
             </svg>
             คัดลอกสรุป
+          </button>
+
+          <button onclick="shareSummaryImage()">
+            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+              <circle cx="18" cy="5" r="3"/>
+              <circle cx="6" cy="12" r="3"/>
+              <circle cx="18" cy="19" r="3"/>
+              <path d="m8.59 13.51 6.83 3.98"/>
+              <path d="m15.41 6.51-6.82 3.98"/>
+            </svg>
+            แชร์รูป
           </button>
 
           <button class="btn-danger" onclick="clearAll()">
@@ -1435,18 +1534,6 @@
             </div>
             <div id="totalPeople" class="value">0</div>
             <div class="caption">Members</div>
-          </div>
-          <div class="stat">
-            <div class="label">
-              <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
-                <path d="m3 3 18 18"/>
-                <path d="M19.5 7.5A3.5 3.5 0 1 1 16 4"/>
-                <path d="M8 20a4 4 0 1 0 0-8"/>
-              </svg>
-              เฉลี่ยต่อคน
-            </div>
-            <div id="shareAmount" class="value">0.00</div>
-            <div class="caption">Equal share</div>
           </div>
         </div>
 
@@ -1541,6 +1628,7 @@
     const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwub6JT3Z6GLVJQO9IJJui9cw7JVTxRBhsPf_0sO7Jej2umZ2QhyctdmeHZrhAS4Giv/exec";
 
     let people = [];
+    let nonDrinkers = [];
     let expenses = [];
     let cloudReady = false;
     let isHydrating = false;
@@ -1664,13 +1752,35 @@
         return { ok: false, error: "ตรวจสอบรหัส Admin ไม่สำเร็จ" };
       }
     }
+    function getExpenseParticipants(item) {
+      if (item && item.isAlcohol) {
+        const drinkers = people.filter(name => !nonDrinkers.includes(name));
+        return drinkers.length ? drinkers : [...people];
+      }
+
+      if (Array.isArray(item && item.participants)) {
+        const participants = item.participants
+          .map(name => String(name || "").trim())
+          .filter(name => people.includes(name));
+
+        if (participants.length) {
+          return [...new Set(participants)];
+        }
+      }
+
+      return [...people];
+    }
+
     function getCurrentData() {
       return {
         people: [...people],
+        nonDrinkers: nonDrinkers.filter(name => people.includes(name)),
         expenses: expenses.map(item => ({
           title: String(item.title || ""),
           payer: String(item.payer || ""),
-          amount: round2(Number(item.amount || 0))
+          amount: round2(Number(item.amount || 0)),
+          isAlcohol: Boolean(item.isAlcohol),
+          participants: getExpenseParticipants(item)
         }))
       };
     }
@@ -1679,16 +1789,40 @@
       const safeData = data && typeof data === "object" ? data : {};
       const safePeople = Array.isArray(safeData.people) ? safeData.people : [];
       const safeExpenses = Array.isArray(safeData.expenses) ? safeData.expenses : [];
+      const safeNonDrinkers = Array.isArray(safeData.nonDrinkers) ? safeData.nonDrinkers : [];
+      const normalizedPeople = [...new Set(safePeople.map(name => String(name || "").trim()).filter(Boolean))];
+      const normalizedNonDrinkers = [...new Set(safeNonDrinkers
+        .map(name => String(name || "").trim())
+        .filter(name => normalizedPeople.includes(name)))];
 
       return {
-        people: [...new Set(safePeople.map(name => String(name || "").trim()).filter(Boolean))],
+        people: normalizedPeople,
+        nonDrinkers: normalizedNonDrinkers,
         expenses: safeExpenses
-          .map(item => ({
-            title: String(item.title || "").trim(),
-            payer: String(item.payer || "").trim(),
-            amount: round2(Number(item.amount || 0))
-          }))
-          .filter(item => item.title && item.payer && item.amount > 0)
+          .map(item => {
+            const isAlcohol = Boolean(item && item.isAlcohol);
+            const fallbackParticipants = isAlcohol
+              ? normalizedPeople.filter(name => !normalizedNonDrinkers.includes(name))
+              : normalizedPeople;
+            const rawParticipants = Array.isArray(item && item.participants) ? item.participants : fallbackParticipants;
+            const participants = [];
+
+            rawParticipants.forEach(name => {
+              const cleanName = String(name || "").trim();
+              if (cleanName && normalizedPeople.includes(cleanName) && !participants.includes(cleanName)) {
+                participants.push(cleanName);
+              }
+            });
+
+            return {
+              title: String(item.title || "").trim(),
+              payer: String(item.payer || "").trim(),
+              amount: round2(Number(item.amount || 0)),
+              isAlcohol,
+              participants: participants.length ? participants : [...fallbackParticipants]
+            };
+          })
+          .filter(item => item.title && item.payer && item.amount > 0 && item.participants.length > 0)
       };
     }
 
@@ -1702,6 +1836,7 @@
       try {
         const data = normalizeClientData(JSON.parse(raw));
         people = data.people;
+        nonDrinkers = data.nonDrinkers || [];
         expenses = data.expenses;
       } catch (error) {
         console.warn("Cannot load saved local cache", error);
@@ -1751,6 +1886,7 @@
 
         isHydrating = true;
         people = data.people;
+        nonDrinkers = data.nonDrinkers || [];
         expenses = data.expenses;
         render();
         isHydrating = false;
@@ -1942,14 +2078,20 @@
         el.className = "person-item";
         el.innerHTML = `
           <input value="${escapeHtml(name)}" oninput="renamePerson(${index}, this.value)" aria-label="แก้ไขชื่อ ${escapeHtml(name)}" />
-          <button class="btn-danger btn-small" onclick="removePerson(${index})">
-            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
-              <path d="M3 6h18"/>
-              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/>
-              <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
-            </svg>
-            ลบ
-          </button>
+          <div class="person-controls">
+            <label class="mini-check">
+              <input type="checkbox" ${nonDrinkers.includes(name) ? "checked" : ""} onchange="toggleNonDrinker(${index}, this.checked)" />
+              ไม่ดื่ม
+            </label>
+            <button class="btn-danger btn-small" onclick="removePerson(${index})">
+              <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M3 6h18"/>
+                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/>
+                <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+              </svg>
+              ลบ
+            </button>
+          </div>
         `;
         list.appendChild(el);
       });
@@ -1981,6 +2123,7 @@
       }
 
       expenses.forEach((expense, index) => {
+        const participants = getExpenseParticipants(expense);
         const el = document.createElement("div");
         el.className = "item";
         el.innerHTML = `
@@ -1999,6 +2142,7 @@
             </svg>
             ลบ
           </button>
+
         `;
         list.appendChild(el);
       });
@@ -2006,25 +2150,35 @@
 
     function renderSummary() {
       const total = round2(expenses.reduce((sum, item) => sum + Number(item.amount || 0), 0));
-      const share = people.length ? round2(total / people.length) : 0;
       const paidMap = Object.fromEntries(people.map(name => [name, 0]));
+      const owedMap = Object.fromEntries(people.map(name => [name, 0]));
 
       expenses.forEach(item => {
+        const participants = getExpenseParticipants(item);
+        const amount = Number(item.amount || 0);
+        const participantShare = participants.length ? amount / participants.length : 0;
+
         if (paidMap[item.payer] !== undefined) {
-          paidMap[item.payer] += Number(item.amount || 0);
+          paidMap[item.payer] += amount;
         }
+
+        participants.forEach(name => {
+          if (owedMap[name] !== undefined) {
+            owedMap[name] += participantShare;
+          }
+        });
       });
 
       document.getElementById("totalAmount").textContent = formatMoney(total);
       document.getElementById("totalPeople").textContent = people.length;
-      document.getElementById("shareAmount").textContent = formatMoney(share);
 
       const tbody = document.getElementById("summaryTable");
       tbody.innerHTML = "";
 
       people.forEach(name => {
         const paid = round2(paidMap[name] || 0);
-        const balance = round2(paid - share);
+        const owed = round2(owedMap[name] || 0);
+        const balance = round2(paid - owed);
         let statusText = "พอดี";
         let cls = "neutral";
 
@@ -2040,16 +2194,16 @@
         tr.innerHTML = `
           <td>${escapeHtml(name)}</td>
           <td>${formatMoney(paid)}</td>
-          <td>${formatMoney(share)}</td>
+          <td>${formatMoney(owed)}</td>
           <td><span class="${cls}">${statusText}</span></td>
         `;
         tbody.appendChild(tr);
       });
 
-      renderSettlements(paidMap, share);
+      renderSettlements(paidMap, owedMap);
     }
 
-    function renderSettlements(paidMap, share) {
+    function renderSettlements(paidMap, owedMap) {
       const list = document.getElementById("settlementList");
       list.innerHTML = "";
 
@@ -2070,7 +2224,7 @@
       const creditors = [];
 
       people.forEach(name => {
-        const balance = round2((paidMap[name] || 0) - share);
+        const balance = round2((paidMap[name] || 0) - (owedMap[name] || 0));
         if (balance < -0.005) {
           debtors.push({ name, amount: round2(Math.abs(balance)) });
         } else if (balance > 0.005) {
@@ -2101,7 +2255,7 @@
 
       const totalDebt = transfers.reduce((sum, t) => sum + t.amount, 0);
       const expectedDebt = people.reduce((sum, name) => {
-        const balance = round2((paidMap[name] || 0) - share);
+        const balance = round2((paidMap[name] || 0) - (owedMap[name] || 0));
         return balance < 0 ? round2(sum + Math.abs(balance)) : sum;
       }, 0);
 
@@ -2174,7 +2328,11 @@
       }
 
       people[index] = cleanName;
-      expenses = expenses.map(item => item.payer === oldName ? { ...item, payer: cleanName } : item);
+      nonDrinkers = nonDrinkers.map(name => name === oldName ? cleanName : name);
+      expenses = expenses.map(item => {
+        const participants = getExpenseParticipants(item).map(name => name === oldName ? cleanName : name);
+        return item.payer === oldName ? { ...item, payer: cleanName, participants } : { ...item, participants };
+      });
       renderPayerOptions();
       renderExpenses();
       renderSummary();
@@ -2183,7 +2341,7 @@
 
     async function removePerson(index) {
       const name = people[index];
-      const hasExpense = expenses.some(item => item.payer === name);
+      const hasExpense = expenses.some(item => item.payer === name || getExpenseParticipants(item).includes(name));
       const message = hasExpense
         ? `มีรายการค่าใช้จ่ายที่ ${name} เป็นคนจ่ายอยู่ หากลบรายชื่อนี้ รายการค่าใช้จ่ายที่เกี่ยวข้องจะถูกลบออกด้วย`
         : `ต้องการลบ ${name} ออกจากรายชื่อคนหารใช่ไหม?`;
@@ -2202,15 +2360,38 @@
       }
 
       people.splice(index, 1);
-      expenses = expenses.filter(item => item.payer !== name);
+      nonDrinkers = nonDrinkers.filter(item => item !== name);
+      expenses = expenses
+        .filter(item => item.payer !== name)
+        .map(item => ({ ...item, participants: getExpenseParticipants(item).filter(participant => participant !== name) }))
+        .filter(item => item.participants.length > 0);
       render();
       showToast("ลบรายชื่อแล้ว");
     }
 
+    function toggleNonDrinker(index, checked) {
+      const name = people[index];
+      if (!name) return;
+
+      if (checked && !nonDrinkers.includes(name)) {
+        nonDrinkers.push(name);
+      }
+
+      if (!checked) {
+        nonDrinkers = nonDrinkers.filter(item => item !== name);
+      }
+
+      renderSummary();
+      save();
+    }
     function addExpense() {
       const title = document.getElementById("expenseTitle").value.trim();
       const payer = document.getElementById("payer").value;
       const amount = Number(document.getElementById("amount").value);
+      const isAlcohol = document.getElementById("isAlcoholExpense").checked;
+      const participants = isAlcohol
+        ? people.filter(name => !nonDrinkers.includes(name))
+        : [...people];
 
       if (!title) {
         showToast("กรุณากรอกรายการ");
@@ -2227,7 +2408,12 @@
         return;
       }
 
-      expenses.push({ title, payer, amount: round2(amount) });
+      if (isAlcohol && participants.length === 0) {
+        showToast("ไม่มีคนดื่มแอลกอฮอล์ในรายการนี้");
+        return;
+      }
+
+      expenses.push({ title, payer, amount: round2(amount), isAlcohol, participants });
       clearExpenseInputs();
       render();
       showToast("เพิ่มค่าใช้จ่ายเรียบร้อย");
@@ -2269,6 +2455,7 @@
     function clearExpenseInputs() {
       document.getElementById("expenseTitle").value = "";
       document.getElementById("amount").value = "";
+      document.getElementById("isAlcoholExpense").checked = false;
     }
 
     async function clearAll() {
@@ -2323,6 +2510,7 @@
 
           isHydrating = true;
           people = [];
+          nonDrinkers = [];
           expenses = [];
           render();
           isHydrating = false;
@@ -2340,6 +2528,7 @@
         return;
       }
       people = [];
+      nonDrinkers = [];
       expenses = [];
       render();
       showToast("ล้างข้อมูลแล้ว");
@@ -2347,9 +2536,10 @@
 
     function resetExample() {
       people = ["ปุ๋ย", "จุ๊บ", "ฮิง"];
+      nonDrinkers = ["ฮิง"];
       expenses = [
-        { title: "ค่าเหล้า+น้ำแข็ง+อาหาร", payer: "ปุ๋ย", amount: 451 },
-        { title: "ค่าอาหาร", payer: "จุ๊บ", amount: 250 }
+        { title: "ค่าเหล้า+น้ำแข็ง", payer: "ปุ๋ย", amount: 451, isAlcohol: true, participants: ["ปุ๋ย", "จุ๊บ"] },
+        { title: "ค่าอาหาร", payer: "จุ๊บ", amount: 250, isAlcohol: false, participants: ["ปุ๋ย", "จุ๊บ", "ฮิง"] }
       ];
       render();
       showToast("โหลดตัวอย่างเรียบร้อย");
@@ -2357,34 +2547,45 @@
 
     function getSummaryText() {
       const total = round2(expenses.reduce((sum, item) => sum + Number(item.amount || 0), 0));
-      const share = people.length ? round2(total / people.length) : 0;
       const paidMap = Object.fromEntries(people.map(name => [name, 0]));
+      const owedMap = Object.fromEntries(people.map(name => [name, 0]));
 
       expenses.forEach(item => {
+        const participants = getExpenseParticipants(item);
+        const amount = Number(item.amount || 0);
+        const participantShare = participants.length ? amount / participants.length : 0;
+
         if (paidMap[item.payer] !== undefined) {
-          paidMap[item.payer] += Number(item.amount || 0);
+          paidMap[item.payer] += amount;
         }
+
+        participants.forEach(name => {
+          if (owedMap[name] !== undefined) {
+            owedMap[name] += participantShare;
+          }
+        });
       });
 
       const lines = [];
       lines.push("สรุปค่าใช้จ่าย Party Split");
       lines.push(`ยอดรวมทั้งหมด: ${formatMoney(total)} บาท`);
       lines.push(`จำนวนคน: ${people.length} คน`);
-      lines.push(`เฉลี่ยต่อคน: ${formatMoney(share)} บาท`);
       lines.push("");
       lines.push("สถานะรายคน:");
 
       people.forEach(name => {
         const paid = round2(paidMap[name] || 0);
-        const balance = round2(paid - share);
+        const owed = round2(owedMap[name] || 0);
+        const balance = round2(paid - owed);
         if (balance > 0) {
-          lines.push(`- ${name}: จ่ายไปแล้ว ${formatMoney(paid)} บาท / รับคืน ${formatMoney(balance)} บาท`);
+          lines.push(`- ${name}: จ่ายไปแล้ว ${formatMoney(paid)} บาท / ควรจ่าย ${formatMoney(owed)} บาท / รับคืน ${formatMoney(balance)} บาท`);
         } else if (balance < 0) {
-          lines.push(`- ${name}: จ่ายไปแล้ว ${formatMoney(paid)} บาท / ต้องจ่าย ${formatMoney(Math.abs(balance))} บาท`);
+          lines.push(`- ${name}: จ่ายไปแล้ว ${formatMoney(paid)} บาท / ควรจ่าย ${formatMoney(owed)} บาท / ต้องจ่าย ${formatMoney(Math.abs(balance))} บาท`);
         } else {
           lines.push(`- ${name}: ลงตัวแล้ว`);
         }
       });
+
 
       const cards = Array.from(document.querySelectorAll(".settlement-card"))
         .map(card => card.innerText.replace(/\n/g, " "));
@@ -2396,6 +2597,296 @@
       return lines.join("\n");
     }
 
+    function wrapCanvasText(ctx, text, maxWidth) {
+      const value = String(text || "");
+      const words = value.includes(" ") ? value.split(" ") : value.split("");
+      const lines = [];
+      let line = "";
+
+      words.forEach((word, index) => {
+        const spacer = value.includes(" ") && index > 0 ? " " : "";
+        const testLine = line ? `${line}${spacer}${word}` : word;
+
+        if (ctx.measureText(testLine).width <= maxWidth || !line) {
+          line = testLine;
+          return;
+        }
+
+        lines.push(line);
+        line = word;
+      });
+
+      if (line) {
+        lines.push(line);
+      }
+
+      return lines;
+    }
+
+    function drawRoundedRect(ctx, x, y, width, height, radius) {
+      const safeRadius = Math.min(radius, width / 2, height / 2);
+      ctx.beginPath();
+      ctx.moveTo(x + safeRadius, y);
+      ctx.lineTo(x + width - safeRadius, y);
+      ctx.quadraticCurveTo(x + width, y, x + width, y + safeRadius);
+      ctx.lineTo(x + width, y + height - safeRadius);
+      ctx.quadraticCurveTo(x + width, y + height, x + width - safeRadius, y + height);
+      ctx.lineTo(x + safeRadius, y + height);
+      ctx.quadraticCurveTo(x, y + height, x, y + height - safeRadius);
+      ctx.lineTo(x, y + safeRadius);
+      ctx.quadraticCurveTo(x, y, x + safeRadius, y);
+      ctx.closePath();
+    }
+    function canvasBlob(canvas) {
+      return new Promise((resolve, reject) => {
+        canvas.toBlob((blob) => {
+          if (blob) {
+            resolve(blob);
+          } else {
+            reject(new Error("Cannot create image"));
+          }
+        }, "image/png", 0.95);
+      });
+    }
+
+    async function createSummaryImageBlob() {
+      const total = round2(expenses.reduce((sum, item) => sum + Number(item.amount || 0), 0));
+      const paidMap = Object.fromEntries(people.map(name => [name, 0]));
+      const owedMap = Object.fromEntries(people.map(name => [name, 0]));
+
+      expenses.forEach(item => {
+        const participants = getExpenseParticipants(item);
+        const amount = Number(item.amount || 0);
+        const participantShare = participants.length ? amount / participants.length : 0;
+
+        if (paidMap[item.payer] !== undefined) {
+          paidMap[item.payer] += amount;
+        }
+
+        participants.forEach(name => {
+          if (owedMap[name] !== undefined) {
+            owedMap[name] += participantShare;
+          }
+        });
+      });
+
+      const rows = people.map(name => {
+        const paid = round2(paidMap[name] || 0);
+        const owed = round2(owedMap[name] || 0);
+        const balance = round2(paid - owed);
+        if (balance > 0) {
+          return { name, paid, owed, status: `รับคืน ${formatMoney(balance)}`, type: "receive" };
+        }
+        if (balance < 0) {
+          return { name, paid, owed, status: `ต้องจ่าย ${formatMoney(Math.abs(balance))}`, type: "pay" };
+        }
+        return { name, paid, owed, status: "พอดี", type: "neutral" };
+      });
+
+      const cards = Array.from(document.querySelectorAll("#settlementList .settlement-card"))
+        .map(card => card.innerText.replace(/\s+/g, " ").trim())
+        .filter(Boolean);
+      const transferLines = cards.length ? cards : ["ไม่มีใครต้องโอนเพิ่ม ลงตัวแล้ว"];
+
+      const canvas = document.createElement("canvas");
+      const ctx = canvas.getContext("2d");
+      const scale = Math.min(window.devicePixelRatio || 1, 2);
+      const width = 980;
+      const padding = 48;
+      const tableX = padding;
+      const tableWidth = width - padding * 2;
+      const rowHeight = 58;
+      const tableHeight = 54 + rows.length * rowHeight;
+      const transferLineHeight = 34;
+
+      ctx.font = "700 24px 'Noto Sans Thai', 'Segoe UI', Tahoma, sans-serif";
+      const wrappedTransfers = [];
+      transferLines.forEach(line => {
+        wrapCanvasText(ctx, line, tableWidth - 44).forEach(item => wrappedTransfers.push(item));
+      });
+
+      const transferHeight = 78 + wrappedTransfers.length * transferLineHeight + 24;
+      const height = Math.max(720, padding * 2 + 118 + 104 + tableHeight + 34 + transferHeight + 26);
+      canvas.width = width * scale;
+      canvas.height = height * scale;
+      canvas.style.width = `${width}px`;
+      canvas.style.height = `${height}px`;
+      ctx.scale(scale, scale);
+
+      const gradient = ctx.createLinearGradient(0, 0, width, height);
+      gradient.addColorStop(0, "#eef7ff");
+      gradient.addColorStop(0.55, "#fffdf4");
+      gradient.addColorStop(1, "#ffeef5");
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, width, height);
+
+      ctx.fillStyle = "rgba(255,255,255,0.76)";
+      ctx.strokeStyle = "rgba(199,210,254,0.9)";
+      ctx.lineWidth = 2;
+      drawRoundedRect(ctx, 24, 24, width - 48, height - 48, 34);
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.fillStyle = "#111827";
+      ctx.font = "900 44px 'Noto Sans Thai', 'Segoe UI', Tahoma, sans-serif";
+      ctx.textAlign = "left";
+      ctx.fillText("สรุปผลการหาร", padding, 86);
+
+      ctx.fillStyle = "#6b7280";
+      ctx.font = "700 20px 'Noto Sans Thai', 'Segoe UI', Tahoma, sans-serif";
+      ctx.fillText(new Date().toLocaleString("th-TH", { dateStyle: "medium", timeStyle: "short" }), padding, 120);
+
+      const statY = 152;
+      const statGap = 14;
+      const statWidth = (tableWidth - statGap) / 2;
+      const statItems = [
+        ["ยอดรวมทั้งหมด", `${formatMoney(total)} บาท`],
+        ["จำนวนคน", `${people.length} คน`]
+      ];
+
+      statItems.forEach(([label, value], index) => {
+        const x = tableX + index * (statWidth + statGap);
+        drawRoundedRect(ctx, x, statY, statWidth, 82, 22);
+        ctx.fillStyle = "rgba(255,255,255,0.82)";
+        ctx.fill();
+        ctx.strokeStyle = "rgba(226,232,240,0.95)";
+        ctx.stroke();
+        ctx.fillStyle = "#6b7280";
+        ctx.font = "800 17px 'Noto Sans Thai', 'Segoe UI', Tahoma, sans-serif";
+        ctx.fillText(label, x + 20, statY + 28);
+        ctx.fillStyle = "#111827";
+        ctx.font = "900 26px 'Noto Sans Thai', 'Segoe UI', Tahoma, sans-serif";
+        ctx.fillText(value, x + 20, statY + 60);
+      });
+
+      const tableY = statY + 112;
+      drawRoundedRect(ctx, tableX, tableY, tableWidth, tableHeight, 24);
+      ctx.fillStyle = "rgba(255,255,255,0.84)";
+      ctx.fill();
+      ctx.strokeStyle = "rgba(226,232,240,0.95)";
+      ctx.stroke();
+
+      const colName = tableX + 24;
+      const colPaid = tableX + 290;
+      const colOwed = tableX + 480;
+      const colStatus = tableX + tableWidth - 24;
+
+      ctx.fillStyle = "#6b7280";
+      ctx.font = "900 18px 'Noto Sans Thai', 'Segoe UI', Tahoma, sans-serif";
+      ctx.textAlign = "left";
+      ctx.fillText("ชื่อ", colName, tableY + 34);
+      ctx.textAlign = "right";
+      ctx.fillText("จ่ายไปแล้ว", colPaid + 110, tableY + 34);
+      ctx.fillText("ควรจ่าย", colOwed + 110, tableY + 34);
+      ctx.fillText("สถานะ", colStatus, tableY + 34);
+
+      ctx.strokeStyle = "rgba(226,232,240,0.95)";
+      ctx.beginPath();
+      ctx.moveTo(tableX, tableY + 54);
+      ctx.lineTo(tableX + tableWidth, tableY + 54);
+      ctx.stroke();
+
+      rows.forEach((row, index) => {
+        const y = tableY + 54 + index * rowHeight;
+        if (index > 0) {
+          ctx.strokeStyle = "rgba(226,232,240,0.9)";
+          ctx.beginPath();
+          ctx.moveTo(tableX, y);
+          ctx.lineTo(tableX + tableWidth, y);
+          ctx.stroke();
+        }
+
+        ctx.fillStyle = "#111827";
+        ctx.font = "900 20px 'Noto Sans Thai', 'Segoe UI', Tahoma, sans-serif";
+        ctx.textAlign = "left";
+        ctx.fillText(row.name, colName, y + 37);
+
+        ctx.fillStyle = "#1f2937";
+        ctx.font = "700 20px 'Noto Sans Thai', 'Segoe UI', Tahoma, sans-serif";
+        ctx.textAlign = "right";
+        ctx.fillText(formatMoney(row.paid), colPaid + 110, y + 37);
+        ctx.fillText(formatMoney(row.owed), colOwed + 110, y + 37);
+
+        const statusWidth = Math.max(130, ctx.measureText(row.status).width + 30);
+        const pillX = colStatus - statusWidth;
+        const pillY = y + 13;
+        const colors = row.type === "receive"
+          ? ["rgba(209,250,229,0.95)", "#047857"]
+          : row.type === "pay"
+            ? ["rgba(254,226,226,0.95)", "#b91c1c"]
+            : ["rgba(226,232,240,0.95)", "#475569"];
+
+        drawRoundedRect(ctx, pillX, pillY, statusWidth, 32, 16);
+        ctx.fillStyle = colors[0];
+        ctx.fill();
+        ctx.fillStyle = colors[1];
+        ctx.font = "900 18px 'Noto Sans Thai', 'Segoe UI', Tahoma, sans-serif";
+        ctx.textAlign = "right";
+        ctx.fillText(row.status, colStatus - 15, y + 36);
+      });
+
+      const transferY = tableY + tableHeight + 34;
+      drawRoundedRect(ctx, tableX, transferY, tableWidth, transferHeight, 24);
+      ctx.fillStyle = "rgba(255,255,255,0.78)";
+      ctx.fill();
+      ctx.strokeStyle = "rgba(226,232,240,0.95)";
+      ctx.stroke();
+
+      ctx.fillStyle = "#111827";
+      ctx.font = "900 30px 'Noto Sans Thai', 'Segoe UI', Tahoma, sans-serif";
+      ctx.textAlign = "left";
+      ctx.fillText("วิธีโอนที่ง่ายที่สุด", tableX + 24, transferY + 44);
+
+      let transferTextY = transferY + 86;
+      ctx.font = "800 23px 'Noto Sans Thai', 'Segoe UI', Tahoma, sans-serif";
+      wrappedTransfers.forEach(line => {
+        ctx.fillStyle = "#374151";
+        ctx.fillText(line, tableX + 24, transferTextY);
+        transferTextY += transferLineHeight;
+      });
+
+      ctx.fillStyle = "#6b7280";
+      ctx.font = "700 17px 'Noto Sans Thai', 'Segoe UI', Tahoma, sans-serif";
+      ctx.fillText("สร้างจาก Party Split Dashboard", padding, height - 52);
+
+      return canvasBlob(canvas);
+    }
+    async function shareSummaryImage() {
+      if (!people.length || !expenses.length) {
+        showToast("กรุณาเพิ่มข้อมูลก่อนแชร์รูป");
+        return;
+      }
+
+      try {
+        const blob = await createSummaryImageBlob();
+
+        if (navigator.share && navigator.canShare && typeof File !== "undefined") {
+          const file = new File([blob], "party-split-summary.png", { type: "image/png" });
+          if (navigator.canShare({ files: [file] })) {
+            await navigator.share({
+              files: [file],
+              title: "Party Split Summary",
+              text: "สรุปค่าใช้จ่าย Party Split"
+            });
+            showToast("เปิดเมนูแชร์แล้ว");
+            return;
+          }
+        }
+
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = "party-split-summary.png";
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        URL.revokeObjectURL(url);
+        showToast("ดาวน์โหลดรูปสรุปแล้ว");
+      } catch (error) {
+        console.error(error);
+        showToast("แชร์รูปไม่สำเร็จ");
+      }
+    }
     async function copySummary() {
       const text = getSummaryText();
       try {
@@ -2428,3 +2919,17 @@
   </script>
 </body>
 </html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -52,6 +52,7 @@ const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxpDyLwnQVfwq7NwWmB
 - Apps Script URL ยังต้องมีอยู่ แต่ใช้เป็น backend API เท่านั้น
 - หลังแก้ `Code.gs` ต้อง Deploy เป็น New version ทุกครั้ง
 - หลังแก้ `index.html` ต้อง push หรืออัปโหลดขึ้น GitHub ใหม่
+- เลือกคนที่ร่วมจ่ายแยกได้ต่อรายการ เช่น ค่าแอลกอฮอล์เลือกเฉพาะคนที่ดื่มได้
 - รหัสล้างข้อมูลทั้งหมดคือ `Admin1234`
 - ข้อมูลหลักอยู่ใน Google Sheet tab `PartySplitDB`
 - ประวัติ Save / Clear อยู่ใน Google Sheet tab `ActivityLog`
